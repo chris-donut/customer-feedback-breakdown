@@ -7,6 +7,7 @@
 - pnpm workspace requires `-w` flag for adding root dependencies
 - mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
 - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
+- Use `parseDocument(buffer, filename, mimeType?)` from lib/parsers for files, `parseGoogleSheetToFeedback(url)` for Google Sheets
 
 ---
 
@@ -101,4 +102,18 @@ Thread: https://ampcode.com/threads/T-019bb48b-12da-77ee-bb67-f7f0ee65389e
   - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
   - CSV parsing needs to handle quoted fields and escaped double quotes
   - Sheet must be publicly accessible ("Anyone with the link can view") for export to work
+---
+
+## 2026-01-12 - US-008
+Thread: https://ampcode.com/threads/T-019bb48c-7e5f-76a8-a478-3c7f7138c2a4
+- Created lib/parsers/index.ts as unified parser interface
+- Exports FeedbackItem interface with id and originalText
+- Exports parseDocument(buffer, filename, mimeType?) for file-based parsing
+- Exports parseGoogleSheet (re-exported) and parseGoogleSheetToFeedback for URL parsing
+- Detects file type by extension and MIME type, routes to appropriate parser
+- Converts text blocks (PDF/Word) and rows (Excel/GSheet) to FeedbackItem[] format
+- Files changed: src/lib/parsers/index.ts
+- **Learnings for future iterations:**
+  - FeedbackItem interface: { id: string, originalText: string } is the canonical format
+  - parseDocument handles file detection; parseGoogleSheetToFeedback for Google Sheets
 ---
