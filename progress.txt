@@ -74,3 +74,16 @@ Thread: https://ampcode.com/threads/T-019bb488-b7dc-77f6-abfd-323173e837f1
   - mammoth is simple: just pass { buffer } to extractRawText and get result.value
   - Keep interface consistent with pdf-parser for unified parser interface later
 ---
+
+## 2026-01-12 - US-006
+Thread: https://ampcode.com/threads/T-019bb489-f709-740e-bacb-334214f9065e
+- Created lib/parsers/excel-parser.ts with parseExcel function
+- Installed xlsx 0.18.5 for Excel parsing
+- Implemented ExcelParseResult interface with rows (string[][]) and sheetName
+- Uses XLSX.read() with buffer type, sheet_to_json with header:1 for raw array output
+- Returns first sheet by default, filters empty rows
+- Files changed: src/lib/parsers/excel-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - xlsx uses `XLSX.read(buffer, { type: "buffer" })` and `XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" })` for raw row arrays
+  - Cast cells to string since Excel can have mixed types
+---
