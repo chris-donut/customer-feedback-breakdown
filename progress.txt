@@ -152,3 +152,16 @@ Thread: https://ampcode.com/threads/T-019bb48f-9fb4-72dc-baca-5d5e14c41700
   - For JSON output use `response_format: { type: "json_object" }`
   - gpt-4o-mini is cost-effective for categorization and title generation tasks
 ---
+
+## 2026-01-12 - US-011
+Thread: https://ampcode.com/threads/T-019bb4a3-bcc8-77f4-83af-4cb80fd2ce50
+- Created lib/services/title-generator.ts with generateTitle and generateTitles functions
+- Uses chat() from AI client with system prompt for title generation
+- Includes codebase context and strategic plan in prompt for relevance
+- Max length configurable (default 80 chars), uses present tense imperative form
+- Batch function generateTitles() processes multiple items with shared context
+- Files changed: src/lib/services/title-generator.ts
+- **Learnings for future iterations:**
+  - Use `generateTitle(feedbackText, options?)` for single title, `generateTitles(items, options?)` for batch
+  - Context is auto-loaded via readContext() if not provided in options
+---
