@@ -1,0 +1,21 @@
+## Codebase Patterns
+- Use `pnpm run typecheck` to validate TypeScript
+- Use `pnpm run build` to validate full build
+- Next.js 16 with App Router in `src/app/`
+- Tailwind CSS 4 with @tailwindcss/postcss
+
+---
+
+## 2026-01-12 18:20 - US-001
+Thread: https://ampcode.com/threads/T-019bb480-3ea0-71bf-a494-3ba1ce0c7f41
+- Initialized Next.js 14+ with TypeScript and App Router
+- Configured Tailwind CSS with postcss
+- Created basic layout with metadata (title/description for Customer Feedback Breakdown)
+- Simplified page.tsx to show app title and description
+- Added typecheck script to package.json
+- Files changed: package.json, src/app/layout.tsx, src/app/page.tsx, tsconfig.json, eslint.config.mjs, next.config.ts, postcss.config.mjs, globals.css, public/*, .gitignore
+- **Learnings for future iterations:**
+  - Next.js 16 create-next-app creates projects with Tailwind CSS 4 and @tailwindcss/postcss
+  - Use `pnpm run typecheck` and `pnpm run build` for validation
+  - Need to add `.next/` to .gitignore manually on this repo
+---
