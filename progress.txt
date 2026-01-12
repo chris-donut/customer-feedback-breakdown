@@ -8,6 +8,7 @@
 - mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
 - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
 - Use `parseDocument(buffer, filename, mimeType?)` from lib/parsers for files, `parseGoogleSheetToFeedback(url)` for Google Sheets
+- AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON
 
 ---
 
@@ -134,4 +135,20 @@ Thread: https://ampcode.com/threads/T-019bb48e-53fb-7364-b107-7e2a42145fcb
   - Services go in src/lib/services/ directory
   - FeedbackItem interface is already defined in lib/parsers/index.ts - import from there
   - Multiple bullet patterns supported: -, •, ●, ◦, ▪, ▸, ►, *, numbered (1. 2.), lettered (a. b.), checkboxes
+---
+
+## 2026-01-12 - US-010
+Thread: https://ampcode.com/threads/T-019bb48f-9fb4-72dc-baca-5d5e14c41700
+- Created lib/ai/client.ts with OpenAI SDK configuration
+- Installed openai 6.16.0 package
+- Exports openai client instance, ChatMessage interface
+- Exports chat() function for text completion with configurable model/temperature/maxTokens
+- Exports generateJSON<T>() function for structured JSON responses
+- Uses OPENAI_API_KEY from environment variable
+- Default model: gpt-4o-mini with temperature 0.3
+- Files changed: src/lib/ai/client.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - OpenAI SDK v6: use `openai.chat.completions.create()` for chat completions
+  - For JSON output use `response_format: { type: "json_object" }`
+  - gpt-4o-mini is cost-effective for categorization and title generation tasks
 ---
