@@ -116,4 +116,22 @@ Thread: https://ampcode.com/threads/T-019bb48c-7e5f-76a8-a478-3c7f7138c2a4
 - **Learnings for future iterations:**
   - FeedbackItem interface: { id: string, originalText: string } is the canonical format
   - parseDocument handles file detection; parseGoogleSheetToFeedback for Google Sheets
+- Use `extractFeedbackItems(content)`, `extractFromText(text)`, or `extractFromRows(rows)` from lib/services/feedback-extractor.ts
+
+---
+
+## 2026-01-12 - US-009
+Thread: https://ampcode.com/threads/T-019bb48e-53fb-7364-b107-7e2a42145fcb
+- Created lib/services/feedback-extractor.ts with extraction functions
+- Implemented RawDocumentContent interface with type discriminator (text | rows)
+- Main function: extractFeedbackItems(content) handles both text and row content
+- Convenience functions: extractFromText(text), extractFromRows(rows)
+- Text parsing handles: bullet points (-•●◦▪▸►*), numbered lists (1. 2. a. b.), checkboxes ([ ] [x]), paragraphs
+- Row parsing joins non-empty cells with " - " separator
+- Returns FeedbackItem[] with { id, originalText } format (consistent with parsers)
+- Files changed: src/lib/services/feedback-extractor.ts
+- **Learnings for future iterations:**
+  - Services go in src/lib/services/ directory
+  - FeedbackItem interface is already defined in lib/parsers/index.ts - import from there
+  - Multiple bullet patterns supported: -, •, ●, ◦, ▪, ▸, ►, *, numbered (1. 2.), lettered (a. b.), checkboxes
 ---
