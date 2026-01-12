@@ -5,6 +5,7 @@
 - Tailwind CSS 4 with @tailwindcss/postcss
 - pdf-parse v2 uses class-based API: `new PDFParse({ data: buffer })` with async `getText()`, `getInfo()`, `destroy()`
 - pnpm workspace requires `-w` flag for adding root dependencies
+- mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
 
 ---
 
@@ -59,4 +60,17 @@ Thread: https://ampcode.com/threads/T-019bb486-c0db-72d5-82c9-375b89b6a1cb
   - pdf-parse v2 has completely different API from v1 - uses class with constructor and async methods
   - Always call parser.destroy() to clean up resources
   - pnpm workspace projects need `-w` flag when adding dependencies to root
+---
+
+## 2026-01-12 - US-005
+Thread: https://ampcode.com/threads/T-019bb488-b7dc-77f6-abfd-323173e837f1
+- Created lib/parsers/word-parser.ts with parseWord function
+- Installed mammoth 1.11.0 for Word document parsing
+- Implemented WordParseResult interface with text and textBlocks
+- Uses mammoth.extractRawText({ buffer }) API
+- Splits text into blocks by double newlines (consistent with pdf-parser)
+- Files changed: src/lib/parsers/word-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - mammoth is simple: just pass { buffer } to extractRawText and get result.value
+  - Keep interface consistent with pdf-parser for unified parser interface later
 ---
