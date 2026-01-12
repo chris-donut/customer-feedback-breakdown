@@ -6,6 +6,7 @@
 - pdf-parse v2 uses class-based API: `new PDFParse({ data: buffer })` with async `getText()`, `getInfo()`, `destroy()`
 - pnpm workspace requires `-w` flag for adding root dependencies
 - mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
+- Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
 
 ---
 
@@ -86,4 +87,18 @@ Thread: https://ampcode.com/threads/T-019bb489-f709-740e-bacb-334214f9065e
 - **Learnings for future iterations:**
   - xlsx uses `XLSX.read(buffer, { type: "buffer" })` and `XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" })` for raw row arrays
   - Cast cells to string since Excel can have mixed types
+---
+
+## 2026-01-12 - US-007
+Thread: https://ampcode.com/threads/T-019bb48b-12da-77ee-bb67-f7f0ee65389e
+- Created lib/parsers/gsheet-parser.ts with parseGoogleSheet function
+- Implemented extractSheetId to parse sheet ID from Google Sheets URL
+- Uses public CSV export endpoint for fetching sheet data
+- Implemented RFC-compliant CSV parser handling quoted fields, escaped quotes, CRLF/LF line endings
+- Returns GSheetParseResult with rows (string[][]) and sheetId
+- Files changed: src/lib/parsers/gsheet-parser.ts
+- **Learnings for future iterations:**
+  - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
+  - CSV parsing needs to handle quoted fields and escaped double quotes
+  - Sheet must be publicly accessible ("Anyone with the link can view") for export to work
 ---
