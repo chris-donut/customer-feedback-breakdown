@@ -3,6 +3,8 @@
 - Use `pnpm run build` to validate full build
 - Next.js 16 with App Router in `src/app/`
 - Tailwind CSS 4 with @tailwindcss/postcss
+- pdf-parse v2 uses class-based API: `new PDFParse({ data: buffer })` with async `getText()`, `getInfo()`, `destroy()`
+- pnpm workspace requires `-w` flag for adding root dependencies
 
 ---
 
@@ -43,4 +45,18 @@ Thread: https://ampcode.com/threads/T-019bb485-7b45-7429-924b-af3022c44611
 - **Learnings for future iterations:**
   - Use Promise.all for parallel async operations when reading multiple sources
   - Empty catch blocks acceptable for optional file reads (e.g., README variants)
+---
+
+## 2026-01-12 - US-004
+Thread: https://ampcode.com/threads/T-019bb486-c0db-72d5-82c9-375b89b6a1cb
+- Created lib/parsers/pdf-parser.ts with parsePdf function
+- Installed pdf-parse v2.4.5 and @types/pdf-parse
+- Implemented PdfParseResult interface with text, pageCount, textBlocks
+- Uses PDFParse class-based API (v2 breaking change from v1)
+- Splits text into blocks by double newlines
+- Files changed: src/lib/parsers/pdf-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - pdf-parse v2 has completely different API from v1 - uses class with constructor and async methods
+  - Always call parser.destroy() to clean up resources
+  - pnpm workspace projects need `-w` flag when adding dependencies to root
 ---
