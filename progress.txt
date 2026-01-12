@@ -31,3 +31,16 @@ Thread: https://ampcode.com/threads/T-019bb483-f918-7339-bf32-b86cb2909482
   - Store lib files under src/lib/ for Next.js App Router projects
   - Context file defaults to project-context.json in project root
 ---
+
+## 2026-01-12 - US-003
+Thread: https://ampcode.com/threads/T-019bb485-7b45-7429-924b-af3022c44611
+- Created lib/codebase-reader.ts with readCodebase function
+- Implemented interfaces: FileNode, DependencyInfo, CodebaseSummary
+- Function accepts directory path and returns structured summary
+- Extracts: file structure (recursive tree), package.json dependencies, README content
+- Ignores node_modules, .git, .next, dist, build, out, .turbo, .cache, coverage, etc.
+- Files changed: src/lib/codebase-reader.ts
+- **Learnings for future iterations:**
+  - Use Promise.all for parallel async operations when reading multiple sources
+  - Empty catch blocks acceptable for optional file reads (e.g., README variants)
+---
