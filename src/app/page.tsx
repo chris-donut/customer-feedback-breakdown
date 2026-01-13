@@ -79,12 +79,26 @@ export default function Home() {
         body: formData,
       });
 
+      const uploadText = await uploadResponse.text();
+
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || "Failed to upload file");
+        let errorMessage = "Failed to upload file";
+        try {
+          const errorData = JSON.parse(uploadText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = uploadText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      const uploadData = await uploadResponse.json();
+      let uploadData;
+      try {
+        uploadData = JSON.parse(uploadText);
+      } catch {
+        throw new Error("Invalid response from server during upload");
+      }
+
       await processAndNavigate(uploadData.items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
