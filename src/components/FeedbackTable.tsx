@@ -10,6 +10,7 @@ import {
   type Priority,
   type ProcessedFeedback,
 } from "@/lib/types";
+import { type HistoryEntry } from "@/lib/feedback-storage";
 
 export interface FeedbackTableProps {
   items: ProcessedFeedback[];
@@ -17,6 +18,8 @@ export interface FeedbackTableProps {
   onSelectionChange: (selectedIds: Set<string>) => void;
   onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority">>) => void;
   editedIds?: Set<string>;
+  postedMap?: Map<string, HistoryEntry>;
+  onDeleteItem?: (itemId: string) => void;
 }
 
 function getConfidenceColor(confidence: number): string {
@@ -272,6 +275,8 @@ interface FeedbackCardProps {
   onIssueTypeChange?: (newType: IssueType) => void;
   onIssueSourceChange?: (newSource: IssueSource) => void;
   onPriorityChange?: (newPriority: Priority) => void;
+  postedEntry?: HistoryEntry;
+  onDelete?: () => void;
 }
 
 function FeedbackCard({
@@ -283,22 +288,63 @@ function FeedbackCard({
   onIssueTypeChange,
   onIssueSourceChange,
   onPriorityChange,
+  postedEntry,
+  onDelete,
 }: FeedbackCardProps) {
   const issueTypeConfig = ISSUE_TYPE_CONFIG[item.issueType || "Improvement"];
   const priorityConfig = PRIORITY_CONFIG[item.priority ?? 3];
+  const isAlreadyPosted = !!postedEntry;
 
   return (
     <div
       className={`
-        rounded-xl border transition-all duration-200 overflow-hidden
-        ${isSelected
-          ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-100 dark:shadow-blue-950"
-          : isEdited
-            ? "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20"
-            : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm"
+        rounded-xl border transition-all duration-200 overflow-hidden relative
+        ${isAlreadyPosted
+          ? "border-green-300 dark:border-green-800 bg-green-50/30 dark:bg-green-950/20"
+          : isSelected
+            ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-100 dark:shadow-blue-950"
+            : isEdited
+              ? "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20"
+              : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm"
         }
       `}
     >
+      {/* Already Posted Banner */}
+      {isAlreadyPosted && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2 bg-green-100 dark:bg-green-900/40 border-b border-green-200 dark:border-green-800">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium text-green-700 dark:text-green-300">
+              Already posted to Linear
+            </span>
+            {postedEntry.linearUrl && (
+              <a
+                href={postedEntry.linearUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 underline"
+              >
+                {postedEntry.linearIssueId || "View issue"}
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            )}
+          </div>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="text-xs text-green-600 dark:text-green-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              title="Remove from queue"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      )}
       {/* Header row: checkbox, title, category, confidence */}
       <div className="flex items-start gap-4 p-4 border-b border-zinc-100 dark:border-zinc-800">
         {/* Checkbox */}
@@ -428,6 +474,8 @@ export function FeedbackTable({
   onSelectionChange,
   onItemUpdate,
   editedIds = new Set(),
+  postedMap = new Map(),
+  onDeleteItem,
 }: FeedbackTableProps) {
   // Sort items by priority (high priority first), then by confidence (high to low)
   // Priority: 1=Urgent, 2=High, 3=Medium, 4=Low, 0=None (treat 0 as lowest)
@@ -582,6 +630,8 @@ export function FeedbackTable({
             onIssueTypeChange={onItemUpdate ? (newType) => handleIssueTypeChange(item.id, newType) : undefined}
             onIssueSourceChange={onItemUpdate ? (newSource) => handleIssueSourceChange(item.id, newSource) : undefined}
             onPriorityChange={onItemUpdate ? (newPriority) => handlePriorityChange(item.id, newPriority) : undefined}
+            postedEntry={postedMap.get(item.originalText)}
+            onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
           />
         ))}
       </div>

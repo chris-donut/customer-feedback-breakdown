@@ -126,4 +126,6 @@ export interface ProcessedFeedback {
   priority: Priority;
   state: WorkflowState;
   projectId?: string;
+  // Source reference URL (links to original document, PDF, spreadsheet, etc.)
+  sourceUrl?: string;
 }

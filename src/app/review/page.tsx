@@ -17,6 +17,8 @@ import {
   saveCurrentFeedback,
   moveToHistory,
   getPostedHistory,
+  getPostedTextMap,
+  type HistoryEntry,
 } from "@/lib/feedback-storage";
 
 const CONFIDENCE_THRESHOLD = 0.8;
@@ -68,6 +70,7 @@ function ReviewPageContent() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [historyCount, setHistoryCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [postedMap, setPostedMap] = useState<Map<string, HistoryEntry>>(new Map());
 
   // Load existing feedback from localStorage and merge with new data
   useEffect(() => {
@@ -75,6 +78,7 @@ function ReviewPageContent() {
     const existingItems = getCurrentFeedback();
     const history = getPostedHistory();
     setHistoryCount(history.length);
+    setPostedMap(getPostedTextMap());
 
     // Check for new data from sessionStorage (just uploaded)
     const storedData = sessionStorage.getItem("feedbackData");
@@ -261,25 +265,45 @@ function ReviewPageContent() {
           <ProgressStepper currentStep="review" completedSteps={["upload"]} />
         </div>
 
-        <header className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-              Review Feedback
-            </h1>
-            <p className="text-zinc-600 dark:text-zinc-400">
-              Review and edit the processed feedback items before posting to Linear.
-            </p>
-          </div>
-          {historyCount > 0 && (
+        <header className="mb-8">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                Review Feedback
+              </h1>
+              <p className="text-zinc-600 dark:text-zinc-400">
+                Review and edit the processed feedback items before posting to Linear.
+              </p>
+            </div>
             <Link
               href="/history"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium rounded-lg transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-medium rounded-lg transition-colors text-sm shadow-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              History ({historyCount})
+              History
+              {historyCount > 0 && (
+                <span className="bg-white/20 dark:bg-black/20 px-1.5 py-0.5 rounded text-xs">
+                  {historyCount}
+                </span>
+              )}
             </Link>
+          </div>
+
+          {/* Uncommitted items status */}
+          {items.length > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  {items.length} uncommitted item{items.length !== 1 ? "s" : ""} pending
+                </span>
+              </div>
+              <span className="text-xs text-amber-600 dark:text-amber-400">
+                These items will persist until posted to Linear or removed
+              </span>
+            </div>
           )}
         </header>
 
@@ -342,6 +366,8 @@ function ReviewPageContent() {
             onSelectionChange={setSelectedIds}
             onItemUpdate={handleItemUpdate}
             editedIds={editedIds}
+            postedMap={postedMap}
+            onDeleteItem={handleDeleteItem}
           />
         </section>
 

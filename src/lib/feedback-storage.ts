@@ -153,3 +153,19 @@ export function moveToHistory(
 
   return { remaining, history };
 }
+
+// Check if feedback text has already been posted (returns history entry if found)
+export function findInHistory(originalText: string): HistoryEntry | undefined {
+  const history = getPostedHistory();
+  return history.find((entry) => entry.feedback.originalText === originalText);
+}
+
+// Get a map of originalText -> HistoryEntry for quick lookups
+export function getPostedTextMap(): Map<string, HistoryEntry> {
+  const history = getPostedHistory();
+  const map = new Map<string, HistoryEntry>();
+  for (const entry of history) {
+    map.set(entry.feedback.originalText, entry);
+  }
+  return map;
+}
