@@ -136,7 +136,7 @@ function ReviewPageContent() {
   }, [items]);
 
   const handleItemUpdate = useCallback(
-    (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category">>) => {
+    (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority" | "sourceUrl">>) => {
       setItems((prev) => {
         const updated = prev.map((item) =>
           item.id === itemId ? { ...item, ...updates } : item
