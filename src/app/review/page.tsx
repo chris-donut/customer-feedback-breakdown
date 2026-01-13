@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useMemo, useCallback, useEffect } from "react";
+import { Suspense, useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FeedbackTable } from "@/components/FeedbackTable";
@@ -71,6 +71,7 @@ function ReviewPageContent() {
   const [historyCount, setHistoryCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [postedMap, setPostedMap] = useState<Map<string, HistoryEntry>>(new Map());
+  const feedbackTableRef = useRef<HTMLElement>(null);
 
   // Load existing feedback from localStorage and merge with new data
   useEffect(() => {
@@ -344,10 +345,14 @@ function ReviewPageContent() {
             onSelectionChange={setSelectedIds}
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
+            feedbackTableRef={feedbackTableRef}
           />
         </section>
 
-        <section className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+        <section
+          ref={feedbackTableRef}
+          className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden"
+        >
           <div className="p-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedCount}</span>{" "}

@@ -9,6 +9,7 @@ export interface QuickFiltersProps {
   onSelectionChange: (ids: Set<string>) => void;
   activeFilter: string | null;
   onFilterChange: (filter: string | null) => void;
+  feedbackTableRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface FilterButton {
@@ -42,6 +43,7 @@ export function QuickFilters({
   onSelectionChange,
   activeFilter,
   onFilterChange,
+  feedbackTableRef,
 }: QuickFiltersProps) {
   const filterButtons: FilterButton[] = useMemo(() => {
     const bugItems = items.filter((i) => i.issueType === "Bug" || i.category === "Bug");
@@ -118,8 +120,43 @@ export function QuickFilters({
     ];
   }, [items]);
 
+  const scrollToTable = () => {
+    if (feedbackTableRef?.current) {
+      setTimeout(() => {
+        feedbackTableRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 100);
+    }
+  };
+
   const handleFilterClick = (filterId: string) => {
-    onFilterChange(activeFilter === filterId ? null : filterId);
+    // Toggle filter off if clicking the same one
+    if (activeFilter === filterId) {
+      onFilterChange(null);
+      return;
+    }
+
+    // Set the active filter
+    onFilterChange(filterId);
+
+    // Find the filter button and get matching items
+    const filterBtn = filterButtons.find((b) => b.id === filterId);
+    if (filterBtn && filterId !== "all") {
+      const filteredItems = filterBtn.filter(items);
+      const filteredIds = new Set(filteredItems.map((i) => i.id));
+
+      // Select only the filtered items (replace current selection)
+      onSelectionChange(filteredIds);
+
+      // Scroll to the feedback table
+      scrollToTable();
+    } else if (filterId === "all") {
+      // "All" filter - select all items
+      onSelectionChange(new Set(items.map((i) => i.id)));
+      scrollToTable();
+    }
   };
 
   const handleSelectFiltered = () => {
@@ -128,6 +165,7 @@ export function QuickFilters({
       const filteredItems = activeBtn.filter(items);
       const newIds = new Set(filteredItems.map((i) => i.id));
       onSelectionChange(new Set([...selectedIds, ...newIds]));
+      scrollToTable();
     }
   };
 
