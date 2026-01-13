@@ -269,3 +269,16 @@ Thread: https://ampcode.com/threads/T-019bb4ad-07fd-74aa-967c-3f6cd8f4a3af
   - OpenAI client must use lazy initialization to avoid build-time errors when env var is missing
   - API route response format: { success, itemCount, items } for consistency with upload/parse-sheet routes
 ---
+
+## 2026-01-12 - US-019
+Thread: https://ampcode.com/threads/T-019bb4ae-afbf-7696-a89f-69712cca0da8
+- Created app/api/post-to-linear/route.ts for Linear posting endpoint
+- Accepts POST with { items: ProcessedFeedback[], teamId?: string } JSON body
+- Validates all required ProcessedFeedback fields (id, originalText, generatedTitle, category, confidence)
+- Calls postToLinear and summarizeResults from linear-poster service
+- Returns { success, results, summary } with PostResult[] and PostSummary
+- Files changed: src/app/api/post-to-linear/route.ts
+- **Learnings for future iterations:**
+  - Response includes both results array and summary for convenient client consumption
+  - ProcessedFeedback validation stricter than FeedbackItem (requires all fields)
+---
