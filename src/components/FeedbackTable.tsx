@@ -16,7 +16,7 @@ export interface FeedbackTableProps {
   items: ProcessedFeedback[];
   selectedIds: Set<string>;
   onSelectionChange: (selectedIds: Set<string>) => void;
-  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority">>) => void;
+  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority" | "sourceUrl">>) => void;
   editedIds?: Set<string>;
   postedMap?: Map<string, HistoryEntry>;
   onDeleteItem?: (itemId: string) => void;
@@ -38,7 +38,6 @@ function getConfidenceBar(confidence: number): string {
   return "bg-red-500";
 }
 
-// Issue Type styling with distinctive icons and colors
 const ISSUE_TYPE_CONFIG: Record<IssueType, { bg: string; text: string; icon: string; border: string }> = {
   "Bug": {
     bg: "bg-red-50 dark:bg-red-950/40",
@@ -84,7 +83,6 @@ const ISSUE_TYPE_CONFIG: Record<IssueType, { bg: string; text: string; icon: str
   },
 };
 
-// Priority styling
 const PRIORITY_CONFIG: Record<Priority, { bg: string; text: string; label: string }> = {
   0: { bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-500 dark:text-zinc-400", label: "None" },
   1: { bg: "bg-red-100 dark:bg-red-900/40", text: "text-red-700 dark:text-red-300", label: "Urgent" },
@@ -168,6 +166,102 @@ function EditableTitle({ value, onChange, isEdited }: EditableTitleProps) {
   );
 }
 
+interface EditableSourceUrlProps {
+  value: string;
+  onChange: (newValue: string) => void;
+}
+
+function EditableSourceUrl({ value, onChange }: EditableSourceUrlProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = useCallback(() => {
+    const trimmed = editValue.trim();
+    if (trimmed !== value) {
+      onChange(trimmed);
+    }
+    setIsEditing(false);
+  }, [editValue, value, onChange]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSave();
+      } else if (e.key === "Escape") {
+        setEditValue(value);
+        setIsEditing(false);
+      }
+    },
+    [handleSave, value]
+  );
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="url"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={handleKeyDown}
+        placeholder="https://example.com/feedback-source"
+        className="w-full px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-900 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      />
+    );
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-2">
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all inline-flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value}
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+        <button
+          type="button"
+          onClick={() => setIsEditing(true)}
+          className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+          title="Edit URL"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className="text-sm text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+      Add source URL
+    </button>
+  );
+}
+
 interface IssueTypeSelectorProps {
   value: IssueType;
   onChange: (newValue: IssueType) => void;
@@ -181,9 +275,9 @@ function IssueTypeSelector({ value, onChange }: IssueTypeSelectorProps) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as IssueType)}
-        className={`appearance-none pl-8 pr-8 py-1.5 rounded-lg text-sm font-medium cursor-pointer border ${config.bg} ${config.text} ${config.border} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm`}
+        className={\`appearance-none pl-8 pr-8 py-1.5 rounded-lg text-sm font-medium cursor-pointer border \${config.bg} \${config.text} \${config.border} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm\`}
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+          backgroundImage: \`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")\`,
           backgroundPosition: "right 0.5rem center",
           backgroundRepeat: "no-repeat",
           backgroundSize: "1rem 1rem",
@@ -196,7 +290,7 @@ function IssueTypeSelector({ value, onChange }: IssueTypeSelectorProps) {
         ))}
       </select>
       <svg
-        className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${config.text} pointer-events-none`}
+        className={\`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 \${config.text} pointer-events-none\`}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -220,9 +314,9 @@ function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
     <select
       value={value}
       onChange={(e) => onChange(Number(e.target.value) as Priority)}
-      className={`appearance-none px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${config.bg} ${config.text} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm`}
+      className={\`appearance-none px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer \${config.bg} \${config.text} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm\`}
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+        backgroundImage: \`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")\`,
         backgroundPosition: "right 0.25rem center",
         backgroundRepeat: "no-repeat",
         backgroundSize: "0.75rem 0.75rem",
@@ -250,7 +344,7 @@ function IssueSourceSelector({ value, onChange }: IssueSourceSelectorProps) {
       onChange={(e) => onChange(e.target.value as IssueSource)}
       className="appearance-none px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm"
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+        backgroundImage: \`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")\`,
         backgroundPosition: "right 0.25rem center",
         backgroundRepeat: "no-repeat",
         backgroundSize: "0.75rem 0.75rem",
@@ -275,6 +369,7 @@ interface FeedbackCardProps {
   onIssueTypeChange?: (newType: IssueType) => void;
   onIssueSourceChange?: (newSource: IssueSource) => void;
   onPriorityChange?: (newPriority: Priority) => void;
+  onSourceUrlChange?: (newUrl: string) => void;
   postedEntry?: HistoryEntry;
   onDelete?: () => void;
 }
@@ -288,6 +383,7 @@ function FeedbackCard({
   onIssueTypeChange,
   onIssueSourceChange,
   onPriorityChange,
+  onSourceUrlChange,
   postedEntry,
   onDelete,
 }: FeedbackCardProps) {
@@ -297,9 +393,9 @@ function FeedbackCard({
 
   return (
     <div
-      className={`
+      className={\`
         rounded-xl border transition-all duration-200 overflow-hidden relative
-        ${isAlreadyPosted
+        \${isAlreadyPosted
           ? "border-green-300 dark:border-green-800 bg-green-50/30 dark:bg-green-950/20"
           : isSelected
             ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-100 dark:shadow-blue-950"
@@ -307,9 +403,8 @@ function FeedbackCard({
               ? "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20"
               : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm"
         }
-      `}
+      \`}
     >
-      {/* Already Posted Banner */}
       {isAlreadyPosted && (
         <div className="flex items-center justify-between gap-3 px-4 py-2 bg-green-100 dark:bg-green-900/40 border-b border-green-200 dark:border-green-800">
           <div className="flex items-center gap-2">
@@ -345,24 +440,22 @@ function FeedbackCard({
           )}
         </div>
       )}
-      {/* Header row: checkbox, title, category, confidence */}
       <div className="flex items-start gap-4 p-4 border-b border-zinc-100 dark:border-zinc-800">
-        {/* Checkbox */}
         <label className="relative flex items-center cursor-pointer pt-1 flex-shrink-0">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={onSelect}
             className="peer sr-only"
-            aria-label={`Select: ${item.generatedTitle}`}
+            aria-label={\`Select: \${item.generatedTitle}\`}
           />
-          <div className={`
+          <div className={\`
             w-5 h-5 rounded-md border-2 transition-all
-            ${isSelected
+            \${isSelected
               ? "bg-blue-600 border-blue-600"
               : "bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 peer-hover:border-blue-400"
             }
-          `}>
+          \`}>
             {isSelected && (
               <svg className="w-full h-full text-white p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                 <polyline points="20 6 9 17 4 12" />
@@ -371,7 +464,6 @@ function FeedbackCard({
           </div>
         </label>
 
-        {/* Title - takes remaining space */}
         <div className="flex-1 min-w-0">
           {onTitleChange ? (
             <EditableTitle
@@ -389,12 +481,11 @@ function FeedbackCard({
           )}
         </div>
 
-        {/* Issue Type */}
         <div className="flex-shrink-0">
           {onIssueTypeChange ? (
             <IssueTypeSelector value={item.issueType || "Improvement"} onChange={onIssueTypeChange} />
           ) : (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${issueTypeConfig.bg} ${issueTypeConfig.text} ${issueTypeConfig.border}`}>
+            <span className={\`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border \${issueTypeConfig.bg} \${issueTypeConfig.text} \${issueTypeConfig.border}\`}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={issueTypeConfig.icon} />
               </svg>
@@ -403,29 +494,27 @@ function FeedbackCard({
           )}
         </div>
 
-        {/* Confidence score */}
         <div className="flex-shrink-0 flex flex-col items-end gap-1">
-          <span className={`text-sm font-mono font-bold ${getConfidenceColor(item.confidence)}`}>
+          <span className={\`text-sm font-mono font-bold \${getConfidenceColor(item.confidence)}\`}>
             {Math.round(item.confidence * 100)}%
           </span>
           <div className="w-16 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
             <div
-              className={`h-full ${getConfidenceBar(item.confidence)} transition-all duration-500`}
-              style={{ width: `${item.confidence * 100}%` }}
+              className={\`h-full \${getConfidenceBar(item.confidence)} transition-all duration-500\`}
+              style={{ width: \`\${item.confidence * 100}%\` }}
             />
           </div>
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">confidence</span>
         </div>
       </div>
 
-      {/* Tags row: Priority, Issue Source */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30">
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Priority:</span>
           {onPriorityChange ? (
             <PrioritySelector value={item.priority ?? 3} onChange={onPriorityChange} />
           ) : (
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.bg} ${priorityConfig.text}`}>
+            <span className={\`px-2 py-0.5 rounded text-xs font-medium \${priorityConfig.bg} \${priorityConfig.text}\`}>
               {priorityConfig.label}
             </span>
           )}
@@ -450,7 +539,6 @@ function FeedbackCard({
         </div>
       </div>
 
-      {/* Original Feedback - full width, scrollable */}
       <div className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
@@ -463,6 +551,35 @@ function FeedbackCard({
             {item.originalText}
           </p>
         </div>
+      </div>
+
+      <div className="px-4 pb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            Source Reference
+          </span>
+          <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+        </div>
+        {onSourceUrlChange ? (
+          <EditableSourceUrl
+            value={item.sourceUrl || ""}
+            onChange={onSourceUrlChange}
+          />
+        ) : item.sourceUrl ? (
+          <a
+            href={item.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all inline-flex items-center gap-1"
+          >
+            {item.sourceUrl}
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        ) : (
+          <span className="text-sm text-zinc-400 dark:text-zinc-500 italic">No source URL</span>
+        )}
       </div>
     </div>
   );
@@ -477,19 +594,13 @@ export function FeedbackTable({
   postedMap = new Map(),
   onDeleteItem,
 }: FeedbackTableProps) {
-  // Sort items by priority (high priority first), then by confidence (high to low)
-  // Priority: 1=Urgent, 2=High, 3=Medium, 4=Low, 0=None (treat 0 as lowest)
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => {
-      // Convert priority 0 to 5 for sorting (so "No priority" appears last)
       const priorityA = a.priority === 0 ? 5 : (a.priority ?? 5);
       const priorityB = b.priority === 0 ? 5 : (b.priority ?? 5);
-
-      // Sort by priority first (lower number = higher priority)
       if (priorityA !== priorityB) {
         return priorityA - priorityB;
       }
-      // Then by confidence (higher confidence first)
       return b.confidence - a.confidence;
     }),
     [items]
@@ -556,6 +667,13 @@ export function FeedbackTable({
     [onItemUpdate]
   );
 
+  const handleSourceUrlChange = useCallback(
+    (itemId: string, newUrl: string) => {
+      onItemUpdate?.(itemId, { sourceUrl: newUrl });
+    },
+    [onItemUpdate]
+  );
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -572,7 +690,6 @@ export function FeedbackTable({
 
   return (
     <div className="space-y-4">
-      {/* Bulk actions header */}
       <div className="flex items-center justify-between px-1 py-2">
         <label className="flex items-center gap-3 cursor-pointer group">
           <div className="relative">
@@ -586,15 +703,15 @@ export function FeedbackTable({
               className="peer sr-only"
               aria-label="Select all items"
             />
-            <div className={`
+            <div className={\`
               w-5 h-5 rounded-md border-2 transition-all
-              ${allSelected
+              \${allSelected
                 ? "bg-blue-600 border-blue-600"
                 : someSelected
                   ? "bg-blue-600 border-blue-600"
                   : "bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400"
               }
-            `}>
+            \`}>
               {allSelected && (
                 <svg className="w-full h-full text-white p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                   <polyline points="20 6 9 17 4 12" />
@@ -608,7 +725,7 @@ export function FeedbackTable({
             </div>
           </div>
           <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 transition-colors">
-            {allSelected ? 'Deselect all' : someSelected ? `${selectedIds.size} selected` : 'Select all'}
+            {allSelected ? 'Deselect all' : someSelected ? \`\${selectedIds.size} selected\` : 'Select all'}
           </span>
         </label>
 
@@ -617,7 +734,6 @@ export function FeedbackTable({
         </span>
       </div>
 
-      {/* Cards grid - sorted by confidence (high to low) */}
       <div className="grid gap-4">
         {sortedItems.map((item) => (
           <FeedbackCard
@@ -630,6 +746,7 @@ export function FeedbackTable({
             onIssueTypeChange={onItemUpdate ? (newType) => handleIssueTypeChange(item.id, newType) : undefined}
             onIssueSourceChange={onItemUpdate ? (newSource) => handleIssueSourceChange(item.id, newSource) : undefined}
             onPriorityChange={onItemUpdate ? (newPriority) => handlePriorityChange(item.id, newPriority) : undefined}
+            onSourceUrlChange={onItemUpdate ? (newUrl) => handleSourceUrlChange(item.id, newUrl) : undefined}
             postedEntry={postedMap.get(item.originalText)}
             onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
           />
