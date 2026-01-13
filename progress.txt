@@ -164,4 +164,22 @@ Thread: https://ampcode.com/threads/T-019bb4a3-bcc8-77f4-83af-4cb80fd2ce50
 - **Learnings for future iterations:**
   - Use `generateTitle(feedbackText, options?)` for single title, `generateTitles(items, options?)` for batch
   - Context is auto-loaded via readContext() if not provided in options
+- Categorizer: `categorize(feedbackText, options?)` for single, `categorizeMany(items, options?)` for batch
+- FeedbackCategory type: "Bug" | "Feature Request" | "UI/UX Issue" | "AI Hallucination" | "New Feature" | "Documentation"
+
+---
+
+## 2026-01-12 - US-012
+Thread: https://ampcode.com/threads/T-019bb4a4-f53b-71ef-a05e-20849f39a02e
+- Created lib/services/categorizer.ts with categorization functions
+- Implemented FeedbackCategory type with 6 categories
+- Exports categorize() for single feedback, categorizeMany() for batch processing
+- Uses generateJSON from AI client with structured JSON response
+- Includes normalizeCategory helper for flexible category matching
+- Configurable confidence threshold (default 80%)
+- Auto-loads context if not provided in options
+- Files changed: src/lib/services/categorizer.ts
+- **Learnings for future iterations:**
+  - Use generateJSON<T>() for structured AI responses instead of chat() with manual parsing
+  - normalizeCategory provides fuzzy matching for AI responses that may vary in formatting
 ---
