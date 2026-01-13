@@ -6,6 +6,7 @@ import { parseGoogleSheet } from "./gsheet-parser";
 export interface FeedbackItem {
   id: string;
   originalText: string;
+  sourceUrl?: string;
 }
 
 export type SupportedFileType = "pdf" | "word" | "excel" | "csv";

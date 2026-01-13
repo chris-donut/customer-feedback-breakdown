@@ -31,7 +31,9 @@ export default function Home() {
     }
   };
 
-  const processAndNavigate = async (items: Array<{ id: string; originalText: string }>) => {
+  const processAndNavigate = async (
+    items: Array<{ id: string; originalText: string; sourceUrl?: string }>
+  ) => {
     // Call /api/process to get AI-generated titles and categories
     const processResponse = await fetch("/api/process", {
       method: "POST",
@@ -99,7 +101,13 @@ export default function Home() {
         throw new Error("Invalid response from server during upload");
       }
 
-      await processAndNavigate(uploadData.items);
+      // Add source reference (filename) to each item
+      const itemsWithSource = uploadData.items.map((item: { id: string; originalText: string }) => ({
+        ...item,
+        sourceUrl: `file://${file.name}`,
+      }));
+
+      await processAndNavigate(itemsWithSource);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
       setIsFileUploading(false);
@@ -133,7 +141,15 @@ export default function Home() {
 
         const text = await parseResponse.text();
         try {
-          return JSON.parse(text);
+          const data = JSON.parse(text);
+          // Add source URL to each item from this sheet
+          return {
+            ...data,
+            items: (data.items || []).map((item: { id: string; originalText: string }) => ({
+              ...item,
+              sourceUrl: url,
+            })),
+          };
         } catch {
           throw new Error(`Invalid response from server for: ${url}`);
         }
@@ -141,7 +157,7 @@ export default function Home() {
 
       const results = await Promise.all(parsePromises);
 
-      // Combine all items from all sheets
+      // Combine all items from all sheets (already have sourceUrl attached)
       const allItems = results.flatMap((data) => data.items || []);
 
       if (allItems.length === 0) {

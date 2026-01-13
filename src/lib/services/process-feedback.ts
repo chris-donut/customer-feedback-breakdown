@@ -34,6 +34,7 @@ export async function processFeedbackItem(
     issueSource: categorization.issueSource,
     priority: categorization.priority,
     state: categorization.state,
+    sourceUrl: item.sourceUrl,
   };
 }
 
