@@ -1,6 +1,7 @@
 import { type FeedbackItem } from "@/lib/parsers";
 import { generateTitle, type TitleGeneratorOptions } from "./title-generator";
 import { categorize, type CategorizationOptions } from "./categorizer";
+import { translateToChinese } from "./translator";
 import { readContext } from "@/lib/context-storage";
 import { type ProcessedFeedback } from "@/lib/types";
 
@@ -19,9 +20,10 @@ export async function processFeedbackItem(
   titleOptions: TitleGeneratorOptions,
   categorizationOptions: CategorizationOptions
 ): Promise<ProcessedFeedback> {
-  const [generatedTitle, categorization] = await Promise.all([
+  const [generatedTitle, categorization, chineseTranslation] = await Promise.all([
     generateTitle(item.originalText, titleOptions),
     categorize(item.originalText, categorizationOptions),
+    translateToChinese(item.originalText),
   ]);
 
   return {
@@ -35,6 +37,7 @@ export async function processFeedbackItem(
     priority: categorization.priority,
     state: categorization.state,
     sourceUrl: item.sourceUrl,
+    chineseTranslation,
   };
 }
 

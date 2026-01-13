@@ -559,6 +559,24 @@ function FeedbackCard({
           </p>
         </div>
 
+        {/* Chinese Translation */}
+        {item.chineseTranslation && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                Chinese Translation
+              </span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">中文翻译</span>
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+            <div className="max-h-40 overflow-y-auto rounded-lg bg-amber-50/50 dark:bg-amber-950/20 p-4 border border-amber-100 dark:border-amber-900/50">
+              <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
+                {item.chineseTranslation}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Source URL */}
         <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700/50">
           <div className="flex items-center gap-2">

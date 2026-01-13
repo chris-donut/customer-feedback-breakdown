@@ -128,4 +128,6 @@ export interface ProcessedFeedback {
   projectId?: string;
   // Source reference URL (links to original document, PDF, spreadsheet, etc.)
   sourceUrl?: string;
+  // Chinese translation for Chinese product managers
+  chineseTranslation?: string;
 }
