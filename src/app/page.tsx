@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/FileUpload";
 import { SheetUrlInput } from "@/components/SheetUrlInput";
+import { ProgressStepper } from "@/components/ProgressStepper";
 
 export default function Home() {
   const router = useRouter();
@@ -143,6 +144,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
+        {/* Progress Stepper */}
+        <div className="mb-8">
+          <ProgressStepper currentStep="upload" />
+        </div>
+
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
             Customer Feedback Breakdown

@@ -4,6 +4,8 @@ import { Suspense, useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FeedbackTable } from "@/components/FeedbackTable";
+import { ProgressStepper } from "@/components/ProgressStepper";
+import { QuickFilters } from "@/components/QuickFilters";
 import {
   FEEDBACK_CATEGORIES,
   type FeedbackCategory,
@@ -54,6 +56,7 @@ function ReviewPageContent() {
   const [editedIds, setEditedIds] = useState<Set<string>>(new Set());
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
     // Try sessionStorage first, then fall back to URL params
@@ -179,6 +182,11 @@ function ReviewPageContent() {
   return (
     <main className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Progress Stepper */}
+        <div className="mb-8">
+          <ProgressStepper currentStep="review" completedSteps={["upload"]} />
+        </div>
+
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Review Feedback
@@ -215,6 +223,17 @@ function ReviewPageContent() {
               );
             })}
           </div>
+        </section>
+
+        {/* Quick Filters */}
+        <section className="mb-6 p-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl">
+          <QuickFilters
+            items={items}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+          />
         </section>
 
         <section className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">

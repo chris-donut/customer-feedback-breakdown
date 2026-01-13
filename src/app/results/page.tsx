@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ProgressStepper } from "@/components/ProgressStepper";
 import {
   FEEDBACK_CATEGORIES,
   type FeedbackCategory,
@@ -140,6 +141,11 @@ function ResultsPageContent() {
   return (
     <main className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-8">
       <div className="max-w-4xl mx-auto">
+        {/* Progress Stepper */}
+        <div className="mb-8">
+          <ProgressStepper currentStep="results" completedSteps={["upload", "review"]} />
+        </div>
+
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
