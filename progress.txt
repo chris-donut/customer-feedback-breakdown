@@ -13,6 +13,7 @@
 - Linear client: `import { createIssue, listTeams, listLabels } from "@/lib/linear/client"` - createIssue returns { success, issue?, url?, error? }
 - Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
 - API routes: `src/app/api/{endpoint}/route.ts` with POST handler, use `request.formData()` for multipart, `request.json()` for JSON body
+- UI components in `src/components/` with "use client" directive; FileUpload: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
 
 ---
 
@@ -281,4 +282,20 @@ Thread: https://ampcode.com/threads/T-019bb4ae-afbf-7696-a89f-69712cca0da8
 - **Learnings for future iterations:**
   - Response includes both results array and summary for convenient client consumption
   - ProcessedFeedback validation stricter than FeedbackItem (requires all fields)
+---
+
+## 2026-01-12 - US-020
+Thread: https://ampcode.com/threads/T-019bb4af-ec18-7022-b6ae-c852ddd29ce6
+- Created components/FileUpload.tsx with drag-and-drop zone
+- Implemented file picker button as alternative to drag-drop
+- Shows accepted file types (PDF, Word, Excel)
+- Displays selected file name and size before upload
+- Visual feedback for drag-over state, uploading state, and errors
+- Temporarily integrated into page.tsx for verification
+- Files changed: src/components/FileUpload.tsx, src/app/page.tsx
+- **Learnings for future iterations:**
+  - UI components go in src/components/ directory
+  - FileUpload component: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
+  - Use "use client" directive for React hooks in Next.js App Router
+  - File validation uses both extension and MIME type for robustness
 ---
