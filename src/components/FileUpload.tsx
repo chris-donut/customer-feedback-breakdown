@@ -9,9 +9,10 @@ const ACCEPTED_TYPES = {
   "application/msword": ".doc",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
   "application/vnd.ms-excel": ".xls",
+  "text/csv": ".csv",
 };
 
-const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx"];
+const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv"];
 
 export interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -199,7 +200,7 @@ export function FileUpload({
               drop
             </p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              PDF, Word (.doc, .docx), or Excel (.xls, .xlsx)
+              PDF, Word (.doc, .docx), Excel (.xls, .xlsx), or CSV (.csv)
             </p>
           </>
         )}

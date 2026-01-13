@@ -22,7 +22,7 @@ export async function parsePdf(buffer: Buffer): Promise<PdfParseResult> {
 
     return {
       text: textResult.text,
-      pageCount: infoResult.pages.length,
+      pageCount: infoResult.total,
       textBlocks,
     };
   } finally {

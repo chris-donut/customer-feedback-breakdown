@@ -7,9 +7,10 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
 ];
 
-const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx"];
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       if (!isValidMime && !isValidExt) {
         return NextResponse.json(
           {
-            error: `Unsupported file type. Allowed types: PDF, Word (.doc, .docx), Excel (.xls, .xlsx)`,
+            error: `Unsupported file type. Allowed types: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), CSV (.csv)`,
           },
           { status: 400 }
         );

@@ -8,7 +8,7 @@ export interface FeedbackItem {
   originalText: string;
 }
 
-export type SupportedFileType = "pdf" | "word" | "excel";
+export type SupportedFileType = "pdf" | "word" | "excel" | "csv";
 
 const EXTENSION_MAP: Record<string, SupportedFileType> = {
   ".pdf": "pdf",
@@ -16,6 +16,7 @@ const EXTENSION_MAP: Record<string, SupportedFileType> = {
   ".docx": "word",
   ".xls": "excel",
   ".xlsx": "excel",
+  ".csv": "csv",
 };
 
 const MIME_TYPE_MAP: Record<string, SupportedFileType> = {
@@ -25,6 +26,7 @@ const MIME_TYPE_MAP: Record<string, SupportedFileType> = {
     "word",
   "application/vnd.ms-excel": "excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "excel",
+  "text/csv": "csv",
 };
 
 export function detectFileType(
@@ -73,7 +75,7 @@ export async function parseDocument(
   const fileType = detectFileType(filename, mimeType);
   if (!fileType) {
     throw new Error(
-      `Unsupported file type for "${filename}". Supported types: PDF, Word (.doc, .docx), Excel (.xls, .xlsx)`
+      `Unsupported file type for "${filename}". Supported types: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), CSV (.csv)`
     );
   }
 
@@ -86,7 +88,8 @@ export async function parseDocument(
       const result = await parseWord(buffer);
       return textBlocksToFeedbackItems(result.textBlocks);
     }
-    case "excel": {
+    case "excel":
+    case "csv": {
       const result = await parseExcel(buffer);
       return rowsToFeedbackItems(result.rows);
     }
