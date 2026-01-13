@@ -50,9 +50,22 @@ export async function parseGoogleSheet(url: string): Promise<GSheetParseResult> 
   }
 
   const csvText = await response.text();
+
+  // Check if Google returned HTML instead of CSV (login/captcha page)
+  if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+    console.error('Google returned HTML instead of CSV. First 500 chars:', csvText.substring(0, 500));
+    throw new Error(
+      'Google Sheets returned a login page instead of data. This can happen when accessing from cloud servers. Please try using the Google Sheets API with a service account, or copy-paste the data directly.'
+    );
+  }
+
   const rows = parseCsv(csvText);
 
   const nonEmptyRows = rows.filter((row) => row.some((cell) => cell.length > 0));
+
+  if (nonEmptyRows.length === 0) {
+    throw new Error('No data found in the Google Sheet. Make sure the sheet contains data in the first tab.');
+  }
 
   return {
     rows: nonEmptyRows,
