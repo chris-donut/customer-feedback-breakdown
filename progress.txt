@@ -242,3 +242,17 @@ Thread: https://ampcode.com/threads/T-019bb4aa-56b5-746c-91fd-ecf78fafa6e6
   - File from FormData has .arrayBuffer() method to convert to Buffer
   - Use detectFileType(filename, mimeType) for validation before parsing
 ---
+
+## 2026-01-12 - US-017
+Thread: https://ampcode.com/threads/T-019bb4ab-c2d9-722a-91b8-42c281f7a71f
+- Created app/api/parse-sheet/route.ts for Google Sheets URL endpoint
+- Accepts POST with { url } JSON body
+- Validates Google Sheets URL format using extractSheetId from gsheet-parser
+- Calls parseGoogleSheetToFeedback and returns FeedbackItem[] in JSON response
+- Returns { success, sheetId, itemCount, items } on success
+- Files changed: src/app/api/parse-sheet/route.ts
+- **Learnings for future iterations:**
+  - Use request.json() for JSON body parsing in Next.js App Router
+  - Validate URL format before calling parser to give clear error messages
+  - Consistent response format with upload route: success, itemCount, items
+---
