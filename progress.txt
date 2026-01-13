@@ -11,6 +11,7 @@
 - AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON
 - Processing pipeline: `import { processFeedback } from "@/lib/services/process-feedback"` - takes FeedbackItem[], returns ProcessedFeedback[]
 - Linear client: `import { createIssue, listTeams, listLabels } from "@/lib/linear/client"` - createIssue returns { success, issue?, url?, error? }
+- Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
 
 ---
 
@@ -211,4 +212,19 @@ Thread: https://ampcode.com/threads/T-019bb4a7-ae90-7369-a2c3-bff5b2c8d068
   - Linear SDK uses LinearClient class with apiKey option
   - createIssue returns IssuePayload with async .issue property to get actual Issue
   - listTeams and listLabels return connection objects with .nodes array
+---
+
+## 2026-01-12 - US-015
+Thread: https://ampcode.com/threads/T-019bb4a8-f7d2-76ad-a72b-65c71a48c834
+- Created lib/services/linear-poster.ts with batch Linear posting
+- Implemented postToLinear() function that processes array of ProcessedFeedback
+- Maps FeedbackCategory to Linear labels with fuzzy matching (exact, partial, category name)
+- Creates issues with formatted description including original text and confidence
+- Returns PostResult[] with feedbackId, linearIssueId, linearUrl, success, error
+- Added summarizeResults() helper for post-processing statistics
+- Files changed: src/lib/services/linear-poster.ts
+- **Learnings for future iterations:**
+  - Use Map to cache label lookups for unique categories to avoid redundant API calls
+  - Linear issue description supports Markdown formatting
+  - Label matching should be flexible: try exact match, then partial match, then category name
 ---
