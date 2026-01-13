@@ -38,12 +38,25 @@ export default function Home() {
       body: JSON.stringify({ items }),
     });
 
+    const text = await processResponse.text();
+
     if (!processResponse.ok) {
-      const errorData = await processResponse.json();
-      throw new Error(errorData.error || "Failed to process feedback");
+      let errorMessage = "Failed to process feedback";
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        errorMessage = text || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
-    const processedData = await processResponse.json();
+    let processedData;
+    try {
+      processedData = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid response from server during processing");
+    }
 
     // Store in sessionStorage to avoid URL length limits
     sessionStorage.setItem("feedbackData", JSON.stringify(processedData.items));
@@ -92,20 +105,32 @@ export default function Home() {
         });
 
         if (!parseResponse.ok) {
-          const errorData = await parseResponse.json();
-          throw new Error(errorData.error || `Failed to parse: ${url}`);
+          const text = await parseResponse.text();
+          let errorMessage = `Failed to parse: ${url}`;
+          try {
+            const errorData = JSON.parse(text);
+            errorMessage = errorData.error || errorMessage;
+          } catch {
+            errorMessage = text || errorMessage;
+          }
+          throw new Error(errorMessage);
         }
 
-        return parseResponse.json();
+        const text = await parseResponse.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          throw new Error(`Invalid response from server for: ${url}`);
+        }
       });
 
       const results = await Promise.all(parsePromises);
 
       // Combine all items from all sheets
-      const allItems = results.flatMap((data) => data.items);
+      const allItems = results.flatMap((data) => data.items || []);
 
       if (allItems.length === 0) {
-        throw new Error("No feedback items found in the provided sheets");
+        throw new Error("No feedback items found in the provided sheets. Make sure the sheet is publicly accessible.");
       }
 
       await processAndNavigate(allItems);
