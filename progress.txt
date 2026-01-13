@@ -15,6 +15,7 @@
 - API routes: `src/app/api/{endpoint}/route.ts` with POST handler, use `request.formData()` for multipart, `request.json()` for JSON body
 - UI components in `src/components/` with "use client" directive; FileUpload: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
 - SheetUrlInput: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
+- Upload page layout: rounded-xl bordered sections, "or" divider between upload methods, global loading banner with isProcessing state
 
 ---
 
@@ -314,4 +315,17 @@ Thread: https://ampcode.com/threads/T-019bb502-3dcc-73de-b354-c52cf27fd9a9
   - SheetUrlInput component: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
   - Google Sheets URL regex: `/^https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/`
   - Keep consistent styling patterns with FileUpload (border colors, focus rings, error styling)
+---
+
+## 2026-01-12 - US-022
+Thread: https://ampcode.com/threads/T-019bb503-b3ed-761c-9bea-a21c1d37c540
+- Updated app/page.tsx with full upload page layout
+- Includes FileUpload and SheetUrlInput components
+- Added "or" divider between upload methods for clear visual separation
+- Added global loading banner when processing (isProcessing state)
+- Each section in rounded-xl bordered card with section header
+- Files changed: src/app/page.tsx
+- **Learnings for future iterations:**
+  - Use isProcessing = isFileUploading || isSheetLoading to disable both inputs during any processing
+  - Divider pattern: relative container with absolute border-t and centered "or" span with bg color
 ---
