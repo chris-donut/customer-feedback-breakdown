@@ -19,10 +19,33 @@ export async function parseGoogleSheet(url: string): Promise<GSheetParseResult> 
 
   const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
 
-  const response = await fetch(csvUrl);
+  const response = await fetch(csvUrl, {
+    redirect: 'follow',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; FeedbackBot/1.0)',
+    },
+  });
+
   if (!response.ok) {
+    // Check if it's a redirect that wasn't followed
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (location) {
+        const redirectResponse = await fetch(location, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; FeedbackBot/1.0)',
+          },
+        });
+        if (redirectResponse.ok) {
+          const csvText = await redirectResponse.text();
+          const rows = parseCsv(csvText);
+          const nonEmptyRows = rows.filter((row) => row.some((cell) => cell.length > 0));
+          return { rows: nonEmptyRows, sheetId };
+        }
+      }
+    }
     throw new Error(
-      `Failed to fetch Google Sheet: ${response.status} ${response.statusText}`
+      `Failed to fetch Google Sheet: ${response.status} ${response.statusText}. Make sure the sheet is publicly accessible (Share → Anyone with the link).`
     );
   }
 
