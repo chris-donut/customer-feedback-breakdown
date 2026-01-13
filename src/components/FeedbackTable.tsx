@@ -203,14 +203,12 @@ function FeedbackCard({
   onTitleChange,
   onCategoryChange,
 }: FeedbackCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const config = CATEGORY_CONFIG[item.category];
-  const shouldTruncate = item.originalText.length > 200;
 
   return (
     <div
       className={`
-        relative rounded-xl border transition-all duration-200
+        rounded-xl border transition-all duration-200 overflow-hidden
         ${isSelected
           ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-100 dark:shadow-blue-950"
           : isEdited
@@ -219,9 +217,10 @@ function FeedbackCard({
         }
       `}
     >
-      {/* Selection checkbox - floating top-left */}
-      <div className="absolute top-4 left-4 z-10">
-        <label className="relative flex items-center cursor-pointer">
+      {/* Header row: checkbox, title, category, confidence */}
+      <div className="flex items-start gap-4 p-4 border-b border-zinc-100 dark:border-zinc-800">
+        {/* Checkbox */}
+        <label className="relative flex items-center cursor-pointer pt-1 flex-shrink-0">
           <input
             type="checkbox"
             checked={isSelected}
@@ -243,27 +242,9 @@ function FeedbackCard({
             )}
           </div>
         </label>
-      </div>
 
-      {/* Confidence indicator - top-right */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full ${getConfidenceBar(item.confidence)} transition-all duration-500`}
-              style={{ width: `${item.confidence * 100}%` }}
-            />
-          </div>
-          <span className={`text-xs font-mono font-medium ${getConfidenceColor(item.confidence)}`}>
-            {Math.round(item.confidence * 100)}%
-          </span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="pt-12 px-5 pb-5">
-        {/* Title */}
-        <div className="mb-4">
+        {/* Title - takes remaining space */}
+        <div className="flex-1 min-w-0">
           {onTitleChange ? (
             <EditableTitle
               value={item.generatedTitle}
@@ -273,39 +254,15 @@ function FeedbackCard({
           ) : (
             <h3 className="text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
               {item.generatedTitle}
+              {isEdited && (
+                <span className="ml-2 inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Edited" />
+              )}
             </h3>
           )}
         </div>
 
-        {/* Original text */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              Original Feedback
-            </span>
-            <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-          </div>
-          <div className={`relative ${!isExpanded && shouldTruncate ? 'max-h-24 overflow-hidden' : ''}`}>
-            <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">
-              {item.originalText}
-            </p>
-            {!isExpanded && shouldTruncate && (
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent pointer-events-none" />
-            )}
-          </div>
-          {shouldTruncate && (
-            <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-            >
-              {isExpanded ? '← Show less' : 'Read more →'}
-            </button>
-          )}
-        </div>
-
         {/* Category */}
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="flex-shrink-0">
           {onCategoryChange ? (
             <CategorySelector value={item.category} onChange={onCategoryChange} />
           ) : (
@@ -316,13 +273,35 @@ function FeedbackCard({
               {item.category}
             </span>
           )}
+        </div>
 
-          {isEdited && (
-            <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Modified
-            </span>
-          )}
+        {/* Confidence score */}
+        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+          <span className={`text-sm font-mono font-bold ${getConfidenceColor(item.confidence)}`}>
+            {Math.round(item.confidence * 100)}%
+          </span>
+          <div className="w-16 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${getConfidenceBar(item.confidence)} transition-all duration-500`}
+              style={{ width: `${item.confidence * 100}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">confidence</span>
+        </div>
+      </div>
+
+      {/* Original Feedback - full width, scrollable */}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            Original Feedback
+          </span>
+          <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+        </div>
+        <div className="max-h-40 overflow-y-auto rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 border border-zinc-100 dark:border-zinc-700/50">
+          <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
+            {item.originalText}
+          </p>
         </div>
       </div>
     </div>
