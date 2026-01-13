@@ -18,6 +18,9 @@
 - Upload page layout: rounded-xl bordered sections, "or" divider between upload methods, global loading banner with isProcessing state
 - FeedbackTable: `import { FeedbackTable } from "@/components/FeedbackTable"` with props: items (ProcessedFeedback[]), selectedIds (Set<string>), onSelectionChange ((ids: Set<string>) => void)
 - FeedbackTable uses color-coded confidence badges (green >=90%, emerald >=80%, yellow >=70%, orange >=50%, red <50%) and category badges
+- Shared types: `import { FeedbackCategory, FEEDBACK_CATEGORIES, ProcessedFeedback } from "@/lib/types"` - use for client components to avoid importing server-only modules
+- useSearchParams() requires Suspense boundary in Next.js 16: wrap component in `<Suspense fallback={...}>`
+- Review page: `/review?data=${encodeURIComponent(JSON.stringify(processedItems))}` - auto-selects items with confidence >= 80%
 
 ---
 
@@ -360,4 +363,22 @@ Thread: https://ampcode.com/threads/T-019bb510-d0f3-764e-9b88-bac636f31319
   - FeedbackTable props: add `onItemUpdate?: (itemId, updates) => void` and `editedIds?: Set<string>` for inline editing
   - Use `useRef` with focus() on mount for click-to-edit input fields
   - Select dropdown styling: use inline SVG for chevron icon via backgroundImage
+---
+
+## 2026-01-12 - US-025
+Thread: https://ampcode.com/threads/T-019bb512-b5f9-71da-8ffb-705de6b532a4
+- Created app/review/page.tsx with full review workflow
+- FeedbackTable with inline editing (onItemUpdate, editedIds)
+- Category distribution summary above table with color-coded badges
+- "Approve & Post to Linear" button disabled when nothing selected
+- Auto-selects items with confidence >= 80%
+- Shows selection count and confidence exclusion note
+- Navigates to /results after successful posting
+- Created lib/types.ts for shared types (FeedbackCategory, FEEDBACK_CATEGORIES, ProcessedFeedback)
+- Refactored categorizer.ts, process-feedback.ts, FeedbackTable.tsx to import from types.ts
+- Files changed: src/app/review/page.tsx, src/lib/types.ts, src/lib/services/categorizer.ts, src/lib/services/process-feedback.ts, src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - useSearchParams() in Next.js 16 requires Suspense boundary - wrap component in <Suspense fallback={...}>
+  - Keep shared types in lib/types.ts to avoid importing server-only modules (fs, path) into client components
+  - Review page reads data from URL query param: `/review?data=${encodeURIComponent(JSON.stringify(processedItems))}`
 ---
