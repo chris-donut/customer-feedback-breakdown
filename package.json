@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@linear/sdk": "^70.0.0",
+    "exceljs": "^4.4.0",
     "mammoth": "^1.11.0",
     "next": "16.1.1",
     "openai": "^6.16.0",
     "pdf-parse": "^2.4.5",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "xlsx": "^0.18.5"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

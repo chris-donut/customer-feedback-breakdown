@@ -1,4 +1,5 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { Readable } from "stream";
 
 export interface ExcelParseResult {
   rows: string[][];
@@ -6,31 +7,47 @@ export interface ExcelParseResult {
 }
 
 export async function parseExcel(buffer: Buffer): Promise<ExcelParseResult> {
-  const workbook = XLSX.read(buffer, { type: "buffer" });
+  const workbook = new ExcelJS.Workbook();
 
-  const firstSheetName = workbook.SheetNames[0];
-  if (!firstSheetName) {
+  // Create a readable stream from the buffer
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+
+  await workbook.xlsx.read(stream);
+
+  const worksheet = workbook.worksheets[0];
+  if (!worksheet) {
     return { rows: [], sheetName: "" };
   }
 
-  const worksheet = workbook.Sheets[firstSheetName];
-  if (!worksheet) {
-    return { rows: [], sheetName: firstSheetName };
-  }
+  const rows: string[][] = [];
 
-  const rawData: unknown[][] = XLSX.utils.sheet_to_json(worksheet, {
-    header: 1,
-    defval: "",
+  worksheet.eachRow((row) => {
+    const rowData: string[] = [];
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      // Handle different cell value types
+      let value = "";
+      if (cell.value !== null && cell.value !== undefined) {
+        if (typeof cell.value === "object" && "text" in cell.value) {
+          // Rich text
+          value = String(cell.value.text);
+        } else if (typeof cell.value === "object" && "result" in cell.value) {
+          // Formula result
+          value = String(cell.value.result ?? "");
+        } else {
+          value = String(cell.value);
+        }
+      }
+      rowData.push(value.trim());
+    });
+    rows.push(rowData);
   });
-
-  const rows: string[][] = rawData.map((row) =>
-    row.map((cell) => String(cell ?? "").trim())
-  );
 
   const nonEmptyRows = rows.filter((row) => row.some((cell) => cell.length > 0));
 
   return {
     rows: nonEmptyRows,
-    sheetName: firstSheetName,
+    sheetName: worksheet.name,
   };
 }
