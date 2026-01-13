@@ -11,6 +11,13 @@ import {
   type IssueType,
   type ProcessedFeedback,
 } from "@/lib/types";
+import {
+  getCurrentFeedback,
+  addFeedbackItems,
+  saveCurrentFeedback,
+  moveToHistory,
+  getPostedHistory,
+} from "@/lib/feedback-storage";
 
 const CONFIDENCE_THRESHOLD = 0.8;
 
@@ -59,22 +66,36 @@ function ReviewPageContent() {
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [historyCount, setHistoryCount] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load existing feedback from localStorage and merge with new data
   useEffect(() => {
-    // Try sessionStorage first, then fall back to URL params
+    // Load existing items from localStorage
+    const existingItems = getCurrentFeedback();
+    const history = getPostedHistory();
+    setHistoryCount(history.length);
+
+    // Check for new data from sessionStorage (just uploaded)
     const storedData = sessionStorage.getItem("feedbackData");
     const dataParam = searchParams.get("data");
-
     const dataString = storedData || (dataParam ? decodeURIComponent(dataParam) : null);
 
     if (dataString) {
       try {
         const parsed = JSON.parse(dataString);
         if (Array.isArray(parsed)) {
-          setItems(parsed);
+          // Merge new items with existing (avoiding duplicates)
+          const mergedItems = addFeedbackItems(parsed);
+          setItems(mergedItems);
+
+          // Auto-select high confidence items from new batch
+          const newIds = new Set(parsed.map((item: ProcessedFeedback) => item.id));
           const highConfidenceIds = new Set(
-            parsed
-              .filter((item: ProcessedFeedback) => item.confidence >= CONFIDENCE_THRESHOLD)
+            mergedItems
+              .filter((item: ProcessedFeedback) =>
+                newIds.has(item.id) && item.confidence >= CONFIDENCE_THRESHOLD
+              )
               .map((item: ProcessedFeedback) => item.id)
           );
           setSelectedIds(highConfidenceIds);
@@ -85,8 +106,14 @@ function ReviewPageContent() {
         }
       } catch {
         setError("Failed to parse feedback data.");
+        setItems(existingItems);
       }
+    } else {
+      // No new data, just load existing
+      setItems(existingItems);
     }
+
+    setIsLoaded(true);
   }, [searchParams]);
 
   const issueTypeDistribution = useMemo(() => {
@@ -105,9 +132,14 @@ function ReviewPageContent() {
 
   const handleItemUpdate = useCallback(
     (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category">>) => {
-      setItems((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, ...updates } : item))
-      );
+      setItems((prev) => {
+        const updated = prev.map((item) =>
+          item.id === itemId ? { ...item, ...updates } : item
+        );
+        // Persist to localStorage
+        saveCurrentFeedback(updated);
+        return updated;
+      });
       setEditedIds((prev) => new Set(prev).add(itemId));
     },
     []
@@ -148,7 +180,16 @@ function ReviewPageContent() {
         throw new Error("Invalid response from server");
       }
 
-      // Store results in sessionStorage to avoid URL length limits
+      // Move successfully posted items to history
+      const postedItemIds = selectedItems.map((item) => item.id);
+      const { remaining, history } = moveToHistory(postedItemIds, data.results);
+
+      // Update local state
+      setItems(remaining);
+      setSelectedIds(new Set());
+      setHistoryCount(history.length);
+
+      // Store results for results page
       sessionStorage.setItem("resultsData", JSON.stringify(data));
       router.push("/results");
     } catch (err) {
@@ -158,8 +199,26 @@ function ReviewPageContent() {
     }
   }, [items, selectedIds, router]);
 
+  const handleDeleteItem = useCallback((itemId: string) => {
+    setItems((prev) => {
+      const updated = prev.filter((item) => item.id !== itemId);
+      saveCurrentFeedback(updated);
+      return updated;
+    });
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(itemId);
+      return newSet;
+    });
+  }, []);
+
   const selectedCount = selectedIds.size;
   const totalCount = items.length;
+
+  // Don't show empty state until we've loaded from localStorage
+  if (!isLoaded) {
+    return <LoadingFallback />;
+  }
 
   if (items.length === 0 && !error) {
     return (
@@ -172,12 +231,22 @@ function ReviewPageContent() {
             <p className="text-zinc-600 dark:text-zinc-400 mb-6">
               Upload a document or paste a Google Sheets URL to get started.
             </p>
-            <Link
-              href="/"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-            >
-              Go to Upload
-            </Link>
+            <div className="flex items-center justify-center gap-4">
+              <Link
+                href="/"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Go to Upload
+              </Link>
+              {historyCount > 0 && (
+                <Link
+                  href="/history"
+                  className="inline-flex items-center px-4 py-2 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium rounded-lg transition-colors"
+                >
+                  View History ({historyCount})
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -192,13 +261,26 @@ function ReviewPageContent() {
           <ProgressStepper currentStep="review" completedSteps={["upload"]} />
         </div>
 
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-            Review Feedback
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Review and edit the processed feedback items before posting to Linear.
-          </p>
+        <header className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+              Review Feedback
+            </h1>
+            <p className="text-zinc-600 dark:text-zinc-400">
+              Review and edit the processed feedback items before posting to Linear.
+            </p>
+          </div>
+          {historyCount > 0 && (
+            <Link
+              href="/history"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium rounded-lg transition-colors text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              History ({historyCount})
+            </Link>
+          )}
         </header>
 
         {error && (
