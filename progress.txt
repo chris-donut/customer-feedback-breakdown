@@ -1,0 +1,400 @@
+## Codebase Patterns
+- Use `pnpm run typecheck` to validate TypeScript
+- Use `pnpm run build` to validate full build
+- Next.js 16 with App Router in `src/app/`
+- Tailwind CSS 4 with @tailwindcss/postcss
+- pdf-parse v2 uses class-based API: `new PDFParse({ data: buffer })` with async `getText()`, `getInfo()`, `destroy()`
+- pnpm workspace requires `-w` flag for adding root dependencies
+- mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
+- Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
+- Use `parseDocument(buffer, filename, mimeType?)` from lib/parsers for files, `parseGoogleSheetToFeedback(url)` for Google Sheets
+- AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON. Uses lazy initialization to avoid build errors when OPENAI_API_KEY is not set.
+- Processing pipeline: `import { processFeedback } from "@/lib/services/process-feedback"` - takes FeedbackItem[], returns ProcessedFeedback[]
+- Linear client: `import { createIssue, listTeams, listLabels } from "@/lib/linear/client"` - createIssue returns { success, issue?, url?, error? }
+- Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
+- API routes: `src/app/api/{endpoint}/route.ts` with POST handler, use `request.formData()` for multipart, `request.json()` for JSON body
+- UI components in `src/components/` with "use client" directive; FileUpload: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
+- SheetUrlInput: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
+- Upload page layout: rounded-xl bordered sections, "or" divider between upload methods, global loading banner with isProcessing state
+- FeedbackTable: `import { FeedbackTable } from "@/components/FeedbackTable"` with props: items (ProcessedFeedback[]), selectedIds (Set<string>), onSelectionChange ((ids: Set<string>) => void)
+- FeedbackTable uses color-coded confidence badges (green >=90%, emerald >=80%, yellow >=70%, orange >=50%, red <50%) and category badges
+- Shared types: `import { FeedbackCategory, FEEDBACK_CATEGORIES, ProcessedFeedback } from "@/lib/types"` - use for client components to avoid importing server-only modules
+- useSearchParams() requires Suspense boundary in Next.js 16: wrap component in `<Suspense fallback={...}>`
+- Review page: `/review?data=${encodeURIComponent(JSON.stringify(processedItems))}` - auto-selects items with confidence >= 80%
+
+---
+
+## 2026-01-12 18:20 - US-001
+Thread: https://ampcode.com/threads/T-019bb480-3ea0-71bf-a494-3ba1ce0c7f41
+- Initialized Next.js 14+ with TypeScript and App Router
+- Configured Tailwind CSS with postcss
+- Created basic layout with metadata (title/description for Customer Feedback Breakdown)
+- Simplified page.tsx to show app title and description
+- Added typecheck script to package.json
+- Files changed: package.json, src/app/layout.tsx, src/app/page.tsx, tsconfig.json, eslint.config.mjs, next.config.ts, postcss.config.mjs, globals.css, public/*, .gitignore
+- **Learnings for future iterations:**
+  - Next.js 16 create-next-app creates projects with Tailwind CSS 4 and @tailwindcss/postcss
+  - Use `pnpm run typecheck` and `pnpm run build` for validation
+  - Need to add `.next/` to .gitignore manually on this repo
+---
+
+## 2026-01-12 18:48 - US-002
+Thread: https://ampcode.com/threads/T-019bb483-f918-7339-bf32-b86cb2909482
+- Created lib/context-storage.ts with read/write functions for project context
+- Implemented interfaces: CodebaseInfo, ProjectContext
+- Functions: readContext, writeContext, updateContext, updateCodebaseInfo, updateStrategicPlan
+- File path configurable via CONTEXT_FILE_PATH environment variable (defaults to project-context.json)
+- Files changed: src/lib/context-storage.ts
+- **Learnings for future iterations:**
+  - Store lib files under src/lib/ for Next.js App Router projects
+  - Context file defaults to project-context.json in project root
+---
+
+## 2026-01-12 - US-003
+Thread: https://ampcode.com/threads/T-019bb485-7b45-7429-924b-af3022c44611
+- Created lib/codebase-reader.ts with readCodebase function
+- Implemented interfaces: FileNode, DependencyInfo, CodebaseSummary
+- Function accepts directory path and returns structured summary
+- Extracts: file structure (recursive tree), package.json dependencies, README content
+- Ignores node_modules, .git, .next, dist, build, out, .turbo, .cache, coverage, etc.
+- Files changed: src/lib/codebase-reader.ts
+- **Learnings for future iterations:**
+  - Use Promise.all for parallel async operations when reading multiple sources
+  - Empty catch blocks acceptable for optional file reads (e.g., README variants)
+---
+
+## 2026-01-12 - US-004
+Thread: https://ampcode.com/threads/T-019bb486-c0db-72d5-82c9-375b89b6a1cb
+- Created lib/parsers/pdf-parser.ts with parsePdf function
+- Installed pdf-parse v2.4.5 and @types/pdf-parse
+- Implemented PdfParseResult interface with text, pageCount, textBlocks
+- Uses PDFParse class-based API (v2 breaking change from v1)
+- Splits text into blocks by double newlines
+- Files changed: src/lib/parsers/pdf-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - pdf-parse v2 has completely different API from v1 - uses class with constructor and async methods
+  - Always call parser.destroy() to clean up resources
+  - pnpm workspace projects need `-w` flag when adding dependencies to root
+---
+
+## 2026-01-12 - US-005
+Thread: https://ampcode.com/threads/T-019bb488-b7dc-77f6-abfd-323173e837f1
+- Created lib/parsers/word-parser.ts with parseWord function
+- Installed mammoth 1.11.0 for Word document parsing
+- Implemented WordParseResult interface with text and textBlocks
+- Uses mammoth.extractRawText({ buffer }) API
+- Splits text into blocks by double newlines (consistent with pdf-parser)
+- Files changed: src/lib/parsers/word-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - mammoth is simple: just pass { buffer } to extractRawText and get result.value
+  - Keep interface consistent with pdf-parser for unified parser interface later
+---
+
+## 2026-01-12 - US-006
+Thread: https://ampcode.com/threads/T-019bb489-f709-740e-bacb-334214f9065e
+- Created lib/parsers/excel-parser.ts with parseExcel function
+- Installed xlsx 0.18.5 for Excel parsing
+- Implemented ExcelParseResult interface with rows (string[][]) and sheetName
+- Uses XLSX.read() with buffer type, sheet_to_json with header:1 for raw array output
+- Returns first sheet by default, filters empty rows
+- Files changed: src/lib/parsers/excel-parser.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - xlsx uses `XLSX.read(buffer, { type: "buffer" })` and `XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" })` for raw row arrays
+  - Cast cells to string since Excel can have mixed types
+---
+
+## 2026-01-12 - US-007
+Thread: https://ampcode.com/threads/T-019bb48b-12da-77ee-bb67-f7f0ee65389e
+- Created lib/parsers/gsheet-parser.ts with parseGoogleSheet function
+- Implemented extractSheetId to parse sheet ID from Google Sheets URL
+- Uses public CSV export endpoint for fetching sheet data
+- Implemented RFC-compliant CSV parser handling quoted fields, escaped quotes, CRLF/LF line endings
+- Returns GSheetParseResult with rows (string[][]) and sheetId
+- Files changed: src/lib/parsers/gsheet-parser.ts
+- **Learnings for future iterations:**
+  - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
+  - CSV parsing needs to handle quoted fields and escaped double quotes
+  - Sheet must be publicly accessible ("Anyone with the link can view") for export to work
+---
+
+## 2026-01-12 - US-008
+Thread: https://ampcode.com/threads/T-019bb48c-7e5f-76a8-a478-3c7f7138c2a4
+- Created lib/parsers/index.ts as unified parser interface
+- Exports FeedbackItem interface with id and originalText
+- Exports parseDocument(buffer, filename, mimeType?) for file-based parsing
+- Exports parseGoogleSheet (re-exported) and parseGoogleSheetToFeedback for URL parsing
+- Detects file type by extension and MIME type, routes to appropriate parser
+- Converts text blocks (PDF/Word) and rows (Excel/GSheet) to FeedbackItem[] format
+- Files changed: src/lib/parsers/index.ts
+- **Learnings for future iterations:**
+  - FeedbackItem interface: { id: string, originalText: string } is the canonical format
+  - parseDocument handles file detection; parseGoogleSheetToFeedback for Google Sheets
+- Use `extractFeedbackItems(content)`, `extractFromText(text)`, or `extractFromRows(rows)` from lib/services/feedback-extractor.ts
+
+---
+
+## 2026-01-12 - US-009
+Thread: https://ampcode.com/threads/T-019bb48e-53fb-7364-b107-7e2a42145fcb
+- Created lib/services/feedback-extractor.ts with extraction functions
+- Implemented RawDocumentContent interface with type discriminator (text | rows)
+- Main function: extractFeedbackItems(content) handles both text and row content
+- Convenience functions: extractFromText(text), extractFromRows(rows)
+- Text parsing handles: bullet points (-•●◦▪▸►*), numbered lists (1. 2. a. b.), checkboxes ([ ] [x]), paragraphs
+- Row parsing joins non-empty cells with " - " separator
+- Returns FeedbackItem[] with { id, originalText } format (consistent with parsers)
+- Files changed: src/lib/services/feedback-extractor.ts
+- **Learnings for future iterations:**
+  - Services go in src/lib/services/ directory
+  - FeedbackItem interface is already defined in lib/parsers/index.ts - import from there
+  - Multiple bullet patterns supported: -, •, ●, ◦, ▪, ▸, ►, *, numbered (1. 2.), lettered (a. b.), checkboxes
+---
+
+## 2026-01-12 - US-010
+Thread: https://ampcode.com/threads/T-019bb48f-9fb4-72dc-baca-5d5e14c41700
+- Created lib/ai/client.ts with OpenAI SDK configuration
+- Installed openai 6.16.0 package
+- Exports openai client instance, ChatMessage interface
+- Exports chat() function for text completion with configurable model/temperature/maxTokens
+- Exports generateJSON<T>() function for structured JSON responses
+- Uses OPENAI_API_KEY from environment variable
+- Default model: gpt-4o-mini with temperature 0.3
+- Files changed: src/lib/ai/client.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - OpenAI SDK v6: use `openai.chat.completions.create()` for chat completions
+  - For JSON output use `response_format: { type: "json_object" }`
+  - gpt-4o-mini is cost-effective for categorization and title generation tasks
+---
+
+## 2026-01-12 - US-011
+Thread: https://ampcode.com/threads/T-019bb4a3-bcc8-77f4-83af-4cb80fd2ce50
+- Created lib/services/title-generator.ts with generateTitle and generateTitles functions
+- Uses chat() from AI client with system prompt for title generation
+- Includes codebase context and strategic plan in prompt for relevance
+- Max length configurable (default 80 chars), uses present tense imperative form
+- Batch function generateTitles() processes multiple items with shared context
+- Files changed: src/lib/services/title-generator.ts
+- **Learnings for future iterations:**
+  - Use `generateTitle(feedbackText, options?)` for single title, `generateTitles(items, options?)` for batch
+  - Context is auto-loaded via readContext() if not provided in options
+- Categorizer: `categorize(feedbackText, options?)` for single, `categorizeMany(items, options?)` for batch
+- FeedbackCategory type: "Bug" | "Feature Request" | "UI/UX Issue" | "AI Hallucination" | "New Feature" | "Documentation"
+
+---
+
+## 2026-01-12 - US-013
+Thread: https://ampcode.com/threads/T-019bb4a6-5037-729e-b5d9-ff607373de5e
+- Created lib/services/process-feedback.ts with processFeedback function
+- Orchestrates full feedback processing: title generation + categorization
+- processFeedbackItem() processes single item, processFeedback() processes batch in parallel
+- Exports ProcessedFeedback interface with id, originalText, generatedTitle, category, confidence
+- Auto-loads context once and passes to both title generator and categorizer
+- Files changed: src/lib/services/process-feedback.ts
+- **Learnings for future iterations:**
+  - Use Promise.all to parallelize title generation and categorization for each item
+  - Load context once at the top of batch processing, pass to individual calls
+---
+
+## 2026-01-12 - US-012
+Thread: https://ampcode.com/threads/T-019bb4a4-f53b-71ef-a05e-20849f39a02e
+- Created lib/services/categorizer.ts with categorization functions
+- Implemented FeedbackCategory type with 6 categories
+- Exports categorize() for single feedback, categorizeMany() for batch processing
+- Uses generateJSON from AI client with structured JSON response
+- Includes normalizeCategory helper for flexible category matching
+- Configurable confidence threshold (default 80%)
+- Auto-loads context if not provided in options
+- Files changed: src/lib/services/categorizer.ts
+- **Learnings for future iterations:**
+  - Use generateJSON<T>() for structured AI responses instead of chat() with manual parsing
+  - normalizeCategory provides fuzzy matching for AI responses that may vary in formatting
+---
+
+## 2026-01-12 - US-014
+Thread: https://ampcode.com/threads/T-019bb4a7-ae90-7369-a2c3-bff5b2c8d068
+- Created lib/linear/client.ts with @linear/sdk integration
+- Installed @linear/sdk 70.0.0
+- Exports linearClient instance, createIssue, listTeams, listLabels, getCurrentUser
+- CreateIssue accepts title, description, teamId, labelIds; returns { success, issue?, url?, error? }
+- API key from LINEAR_API_KEY, default team from LINEAR_TEAM_ID env vars
+- Files changed: src/lib/linear/client.ts, package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - Linear SDK uses LinearClient class with apiKey option
+  - createIssue returns IssuePayload with async .issue property to get actual Issue
+  - listTeams and listLabels return connection objects with .nodes array
+---
+
+## 2026-01-12 - US-015
+Thread: https://ampcode.com/threads/T-019bb4a8-f7d2-76ad-a72b-65c71a48c834
+- Created lib/services/linear-poster.ts with batch Linear posting
+- Implemented postToLinear() function that processes array of ProcessedFeedback
+- Maps FeedbackCategory to Linear labels with fuzzy matching (exact, partial, category name)
+- Creates issues with formatted description including original text and confidence
+- Returns PostResult[] with feedbackId, linearIssueId, linearUrl, success, error
+- Added summarizeResults() helper for post-processing statistics
+- Files changed: src/lib/services/linear-poster.ts
+- **Learnings for future iterations:**
+  - Use Map to cache label lookups for unique categories to avoid redundant API calls
+  - Linear issue description supports Markdown formatting
+  - Label matching should be flexible: try exact match, then partial match, then category name
+---
+
+## 2026-01-12 - US-016
+Thread: https://ampcode.com/threads/T-019bb4aa-56b5-746c-91fd-ecf78fafa6e6
+- Created app/api/upload/route.ts for document upload endpoint
+- Accepts POST with multipart form data (file field)
+- Validates file type using detectFileType from lib/parsers
+- Calls parseDocument and returns FeedbackItem[] in JSON response
+- Files changed: src/app/api/upload/route.ts
+- **Learnings for future iterations:**
+  - Next.js App Router uses request.formData() to access multipart form data
+  - File from FormData has .arrayBuffer() method to convert to Buffer
+  - Use detectFileType(filename, mimeType) for validation before parsing
+---
+
+## 2026-01-12 - US-017
+Thread: https://ampcode.com/threads/T-019bb4ab-c2d9-722a-91b8-42c281f7a71f
+- Created app/api/parse-sheet/route.ts for Google Sheets URL endpoint
+- Accepts POST with { url } JSON body
+- Validates Google Sheets URL format using extractSheetId from gsheet-parser
+- Calls parseGoogleSheetToFeedback and returns FeedbackItem[] in JSON response
+- Returns { success, sheetId, itemCount, items } on success
+- Files changed: src/app/api/parse-sheet/route.ts
+- **Learnings for future iterations:**
+  - Use request.json() for JSON body parsing in Next.js App Router
+  - Validate URL format before calling parser to give clear error messages
+  - Consistent response format with upload route: success, itemCount, items
+---
+
+## 2026-01-12 - US-018
+Thread: https://ampcode.com/threads/T-019bb4ad-07fd-74aa-967c-3f6cd8f4a3af
+- Created app/api/process/route.ts for feedback processing endpoint
+- Accepts POST with { items: FeedbackItem[] } JSON body
+- Validates items array structure (id and originalText required)
+- Calls processFeedback pipeline and returns ProcessedFeedback[]
+- Fixed OpenAI client to use lazy initialization (getOpenAI()) to avoid build errors
+- Files changed: src/app/api/process/route.ts, src/lib/ai/client.ts
+- **Learnings for future iterations:**
+  - OpenAI client must use lazy initialization to avoid build-time errors when env var is missing
+  - API route response format: { success, itemCount, items } for consistency with upload/parse-sheet routes
+---
+
+## 2026-01-12 - US-019
+Thread: https://ampcode.com/threads/T-019bb4ae-afbf-7696-a89f-69712cca0da8
+- Created app/api/post-to-linear/route.ts for Linear posting endpoint
+- Accepts POST with { items: ProcessedFeedback[], teamId?: string } JSON body
+- Validates all required ProcessedFeedback fields (id, originalText, generatedTitle, category, confidence)
+- Calls postToLinear and summarizeResults from linear-poster service
+- Returns { success, results, summary } with PostResult[] and PostSummary
+- Files changed: src/app/api/post-to-linear/route.ts
+- **Learnings for future iterations:**
+  - Response includes both results array and summary for convenient client consumption
+  - ProcessedFeedback validation stricter than FeedbackItem (requires all fields)
+---
+
+## 2026-01-12 - US-020
+Thread: https://ampcode.com/threads/T-019bb4af-ec18-7022-b6ae-c852ddd29ce6
+- Created components/FileUpload.tsx with drag-and-drop zone
+- Implemented file picker button as alternative to drag-drop
+- Shows accepted file types (PDF, Word, Excel)
+- Displays selected file name and size before upload
+- Visual feedback for drag-over state, uploading state, and errors
+- Temporarily integrated into page.tsx for verification
+- Files changed: src/components/FileUpload.tsx, src/app/page.tsx
+- **Learnings for future iterations:**
+  - UI components go in src/components/ directory
+  - FileUpload component: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
+  - Use "use client" directive for React hooks in Next.js App Router
+  - File validation uses both extension and MIME type for robustness
+---
+
+## 2026-01-12 - US-021
+Thread: https://ampcode.com/threads/T-019bb502-3dcc-73de-b354-c52cf27fd9a9
+- Created components/SheetUrlInput.tsx with Google Sheets URL input
+- Text input with placeholder showing expected URL format
+- URL validation using regex for Google Sheets URL pattern
+- Error display for invalid URLs (empty, wrong format)
+- Import button with loading state and icon
+- Helper text indicating sheet must be publicly accessible
+- Files changed: src/components/SheetUrlInput.tsx
+- **Learnings for future iterations:**
+  - SheetUrlInput component: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
+  - Google Sheets URL regex: `/^https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/`
+  - Keep consistent styling patterns with FileUpload (border colors, focus rings, error styling)
+---
+
+## 2026-01-12 - US-022
+Thread: https://ampcode.com/threads/T-019bb503-b3ed-761c-9bea-a21c1d37c540
+- Updated app/page.tsx with full upload page layout
+- Includes FileUpload and SheetUrlInput components
+- Added "or" divider between upload methods for clear visual separation
+- Added global loading banner when processing (isProcessing state)
+- Each section in rounded-xl bordered card with section header
+- Files changed: src/app/page.tsx
+- **Learnings for future iterations:**
+  - Use isProcessing = isFileUploading || isSheetLoading to disable both inputs during any processing
+  - Divider pattern: relative container with absolute border-t and centered "or" span with bg color
+---
+
+## 2026-01-12 - US-023
+Thread: https://ampcode.com/threads/T-019bb509-f5c1-712f-83ac-3d3a8fb688cf
+- Created components/FeedbackTable.tsx for feedback review table
+- Table columns: Select (checkbox), Original Text, Generated Title, Category, Confidence
+- Checkbox for bulk selection with select all / deselect all (supports indeterminate state)
+- Confidence shown as percentage with color-coded indicator (green/emerald/yellow/orange/red)
+- Category badges with distinct colors per type (Bug=red, Feature Request=blue, etc.)
+- Uses controlled selection via selectedIds Set and onSelectionChange callback
+- Files changed: src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - Use `ref` callback with `el.indeterminate = someSelected` for checkbox indeterminate state
+  - Color-coded confidence: >=90% green, >=80% emerald, >=70% yellow, >=50% orange, <50% red
+  - Table uses ProcessedFeedback type from lib/services/process-feedback
+---
+
+## 2026-01-12 - US-024
+Thread: https://ampcode.com/threads/T-019bb510-d0f3-764e-9b88-bac636f31319
+- Added inline editing to FeedbackTable component
+- EditableTitleCell: click-to-edit title field with Enter to save, Escape to cancel
+- CategoryDropdown: styled select with all FEEDBACK_CATEGORIES options
+- New props: onItemUpdate callback for changes, editedIds Set for visual indicator
+- Visual indicator: amber dot next to edited fields, amber row background tint
+- Backward compatible: if onItemUpdate not provided, shows read-only display
+- Files changed: src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - FeedbackTable props: add `onItemUpdate?: (itemId, updates) => void` and `editedIds?: Set<string>` for inline editing
+  - Use `useRef` with focus() on mount for click-to-edit input fields
+  - Select dropdown styling: use inline SVG for chevron icon via backgroundImage
+---
+
+## 2026-01-12 - US-025
+Thread: https://ampcode.com/threads/T-019bb512-b5f9-71da-8ffb-705de6b532a4
+- Created app/review/page.tsx with full review workflow
+- FeedbackTable with inline editing (onItemUpdate, editedIds)
+- Category distribution summary above table with color-coded badges
+- "Approve & Post to Linear" button disabled when nothing selected
+- Auto-selects items with confidence >= 80%
+- Shows selection count and confidence exclusion note
+- Navigates to /results after successful posting
+- Created lib/types.ts for shared types (FeedbackCategory, FEEDBACK_CATEGORIES, ProcessedFeedback)
+- Refactored categorizer.ts, process-feedback.ts, FeedbackTable.tsx to import from types.ts
+- Files changed: src/app/review/page.tsx, src/lib/types.ts, src/lib/services/categorizer.ts, src/lib/services/process-feedback.ts, src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - useSearchParams() in Next.js 16 requires Suspense boundary - wrap component in <Suspense fallback={...}>
+  - Keep shared types in lib/types.ts to avoid importing server-only modules (fs, path) into client components
+  - Review page reads data from URL query param: `/review?data=${encodeURIComponent(JSON.stringify(processedItems))}`
+---
+
+## 2026-01-12 - US-026
+Thread: https://ampcode.com/threads/T-019bb516-f050-72df-8708-bd476ed006a6
+- Created app/results/page.tsx with results display after Linear posting
+- Shows total items processed, successful, and failed counts in summary cards
+- Displays category breakdown with color-coded badges (consistent with review page)
+- Lists all created Linear issues with clickable external links
+- Shows failed items section with error messages if any
+- "Start New Upload" button to return to home page
+- Uses Suspense boundary for useSearchParams (Next.js 16 requirement)
+- Files changed: src/app/results/page.tsx
+- **Learnings for future iterations:**
+  - Results page receives data from review page via URL query param: `/results?data=${encodeURIComponent(JSON.stringify(apiResponse))}`
+  - API response structure: `{ success, results: PostResult[], summary: PostSummary }`
+  - Reuse getCategoryColor function pattern from review page for consistent styling
+---

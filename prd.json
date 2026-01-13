@@ -1,0 +1,474 @@
+{
+  "project": "CustomerFeedbackBreakdown",
+  "branchName": "ralph/customer-feedback-bot",
+  "description": "Customer Feedback Bot - Analyze feedback documents, categorize issues, and post to Linear",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize Next.js project with TypeScript",
+      "description": "As a developer, I need a basic Next.js project structure to build the application.",
+      "acceptanceCriteria": [
+        "Next.js 14+ with App Router initialized",
+        "TypeScript configured",
+        "Tailwind CSS installed and configured",
+        "Basic layout component created",
+        "Dev server runs on port 3000",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create JSON context storage utility",
+      "description": "As a developer, I need a utility to read/write project context to a JSON file.",
+      "acceptanceCriteria": [
+        "Create lib/context-storage.ts",
+        "Function to read context from JSON file",
+        "Function to write/append context to JSON file",
+        "Context includes: codebaseInfo, strategicPlan fields",
+        "File path configurable via environment variable",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Build codebase reader utility",
+      "description": "As a developer, I need to read and extract key info from a project codebase.",
+      "acceptanceCriteria": [
+        "Create lib/codebase-reader.ts",
+        "Function accepts directory path as input",
+        "Extracts: file structure, package.json dependencies, README content",
+        "Returns structured object with codebase summary",
+        "Ignores node_modules, .git, and common build folders",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create document parser for PDF files",
+      "description": "As a developer, I need to extract text content from PDF documents.",
+      "acceptanceCriteria": [
+        "Install pdf-parse or similar library",
+        "Create lib/parsers/pdf-parser.ts",
+        "Function accepts file buffer, returns extracted text",
+        "Handles multi-page PDFs",
+        "Returns array of text blocks/paragraphs",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Create document parser for Word files",
+      "description": "As a developer, I need to extract text content from Word documents.",
+      "acceptanceCriteria": [
+        "Install mammoth or similar library",
+        "Create lib/parsers/word-parser.ts",
+        "Function accepts file buffer, returns extracted text",
+        "Preserves paragraph structure",
+        "Returns array of text blocks",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Create document parser for Excel files",
+      "description": "As a developer, I need to extract data from Excel spreadsheets.",
+      "acceptanceCriteria": [
+        "Install xlsx or similar library",
+        "Create lib/parsers/excel-parser.ts",
+        "Function accepts file buffer, returns rows as array",
+        "Each row becomes a potential feedback item",
+        "Handles multiple sheets (uses first sheet by default)",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Create Google Sheets URL parser",
+      "description": "As a developer, I need to fetch and parse data from public Google Sheets URLs.",
+      "acceptanceCriteria": [
+        "Create lib/parsers/gsheet-parser.ts",
+        "Function accepts Google Sheets URL",
+        "Extracts sheet ID from URL",
+        "Fetches data via Google Sheets public CSV export",
+        "Returns rows as array of feedback items",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Create unified document parser interface",
+      "description": "As a developer, I need a single entry point to parse any supported document type.",
+      "acceptanceCriteria": [
+        "Create lib/parsers/index.ts",
+        "Export parseDocument function that detects file type",
+        "Routes to appropriate parser (PDF, Word, Excel)",
+        "Export parseGoogleSheet for URL-based parsing",
+        "Returns consistent FeedbackItem[] format",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Create feedback extraction service",
+      "description": "As a developer, I need to split raw document text into individual feedback items.",
+      "acceptanceCriteria": [
+        "Create lib/services/feedback-extractor.ts",
+        "Function takes parsed document content",
+        "Splits into individual feedback entries",
+        "Handles bullet points, numbered lists, paragraphs, spreadsheet rows",
+        "Returns array of { id, originalText } objects",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Set up OpenAI/Anthropic client for AI processing",
+      "description": "As a developer, I need an AI client configured for text analysis.",
+      "acceptanceCriteria": [
+        "Create lib/ai/client.ts",
+        "Configure OpenAI or Anthropic SDK",
+        "API key loaded from environment variable",
+        "Export reusable client instance",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Create AI title generator service",
+      "description": "As a developer, I need AI to generate summary titles for feedback items.",
+      "acceptanceCriteria": [
+        "Create lib/services/title-generator.ts",
+        "Function takes feedback text and context",
+        "Calls AI to generate concise title (< 80 chars)",
+        "Includes codebase context in prompt for relevance",
+        "Returns generated title string",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Create AI categorization service",
+      "description": "As a developer, I need AI to categorize feedback into issue types.",
+      "acceptanceCriteria": [
+        "Create lib/services/categorizer.ts",
+        "Categories: Bug, Feature Request, UI/UX Issue, AI Hallucination, New Feature, Documentation",
+        "Function takes feedback text and returns category + confidence score",
+        "Confidence threshold: 80% (configurable)",
+        "Returns { category, confidence } object",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Create feedback processing pipeline",
+      "description": "As a developer, I need to orchestrate the full feedback processing flow.",
+      "acceptanceCriteria": [
+        "Create lib/services/process-feedback.ts",
+        "Function takes raw feedback items array",
+        "Calls title generator for each item",
+        "Calls categorizer for each item",
+        "Returns ProcessedFeedback[] with title, category, confidence, originalText",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Create Linear API client",
+      "description": "As a developer, I need to integrate with Linear API for issue creation.",
+      "acceptanceCriteria": [
+        "Install @linear/sdk",
+        "Create lib/linear/client.ts",
+        "Configure client with API key from environment",
+        "Export function to create issue with title, description, label",
+        "Export function to list available teams/projects",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Create batch Linear posting service",
+      "description": "As a developer, I need to post multiple issues to Linear in batch.",
+      "acceptanceCriteria": [
+        "Create lib/services/linear-poster.ts",
+        "Function takes array of ProcessedFeedback items",
+        "Creates Linear issue for each item",
+        "Maps category to Linear label",
+        "Returns array of { feedbackId, linearIssueId, linearUrl, success }",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Create API route for document upload",
+      "description": "As a developer, I need an API endpoint to handle file uploads.",
+      "acceptanceCriteria": [
+        "Create app/api/upload/route.ts",
+        "Accepts POST with multipart form data",
+        "Validates file type (PDF, Word, Excel)",
+        "Calls parseDocument and returns extracted items",
+        "Returns JSON response with feedback items",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Create API route for Google Sheets URL",
+      "description": "As a developer, I need an API endpoint to process Google Sheets URLs.",
+      "acceptanceCriteria": [
+        "Create app/api/parse-sheet/route.ts",
+        "Accepts POST with { url } body",
+        "Validates Google Sheets URL format",
+        "Calls parseGoogleSheet and returns extracted items",
+        "Returns JSON response with feedback items",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Create API route for feedback processing",
+      "description": "As a developer, I need an API endpoint to process extracted feedback.",
+      "acceptanceCriteria": [
+        "Create app/api/process/route.ts",
+        "Accepts POST with array of feedback items",
+        "Calls processFeedback pipeline",
+        "Returns ProcessedFeedback[] with titles, categories, confidence",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Create API route for Linear posting",
+      "description": "As a developer, I need an API endpoint to post approved items to Linear.",
+      "acceptanceCriteria": [
+        "Create app/api/post-to-linear/route.ts",
+        "Accepts POST with array of approved ProcessedFeedback items",
+        "Calls linearPoster service",
+        "Returns array of created issue URLs and status",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Build file upload UI component",
+      "description": "As a user, I want to upload feedback documents via drag-and-drop or file picker.",
+      "acceptanceCriteria": [
+        "Create components/FileUpload.tsx",
+        "Drag-and-drop zone with visual feedback",
+        "File picker button as alternative",
+        "Shows accepted file types (PDF, Word, Excel)",
+        "Displays selected file name before upload",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Build Google Sheets URL input component",
+      "description": "As a user, I want to paste a Google Sheets URL to import feedback.",
+      "acceptanceCriteria": [
+        "Create components/SheetUrlInput.tsx",
+        "Text input for pasting URL",
+        "Validates Google Sheets URL format",
+        "Shows error for invalid URLs",
+        "Import button to trigger fetch",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Build upload page with both input methods",
+      "description": "As a user, I want a page to upload documents or paste URLs.",
+      "acceptanceCriteria": [
+        "Create app/page.tsx as main upload page",
+        "Includes FileUpload component",
+        "Includes SheetUrlInput component",
+        "Clear visual separation between upload methods",
+        "Loading state while processing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Build feedback review table component",
+      "description": "As a user, I want to see all extracted feedback in a review table.",
+      "acceptanceCriteria": [
+        "Create components/FeedbackTable.tsx",
+        "Table columns: Select, Original Text, Generated Title, Category, Confidence",
+        "Checkbox for bulk selection",
+        "Select all / deselect all functionality",
+        "Confidence shown as percentage with color indicator",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Add inline editing to feedback table",
+      "description": "As a user, I want to edit titles and categories before posting.",
+      "acceptanceCriteria": [
+        "Title cell is editable on click",
+        "Category cell has dropdown to change category",
+        "Changes update local state immediately",
+        "Visual indicator for edited items",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 24,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Build review page with approval workflow",
+      "description": "As a user, I want to review processed feedback and approve for posting.",
+      "acceptanceCriteria": [
+        "Create app/review/page.tsx",
+        "Includes FeedbackTable component",
+        "Shows category distribution summary above table",
+        "'Approve & Post to Linear' button for selected items",
+        "Button disabled when nothing selected",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 25,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Build results page with Linear links",
+      "description": "As a user, I want to see results after posting to Linear.",
+      "acceptanceCriteria": [
+        "Create app/results/page.tsx",
+        "Shows total items processed count",
+        "Shows breakdown by category",
+        "List of created Linear issues with clickable links",
+        "'Start New Upload' button to return to home",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 26,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Add strategic plan input to upload page",
+      "description": "As a user, I want to input my strategic plan for better categorization.",
+      "acceptanceCriteria": [
+        "Add collapsible 'Strategic Context' section to upload page",
+        "Textarea for entering strategic plan text",
+        "Save button stores to context JSON file",
+        "Shows 'Context saved' confirmation",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Wire up full upload-to-review flow",
+      "description": "As a user, I want the upload to automatically process and navigate to review.",
+      "acceptanceCriteria": [
+        "Upload triggers API call to /api/upload or /api/parse-sheet",
+        "Then calls /api/process with extracted items",
+        "Shows processing progress indicator",
+        "Automatically navigates to /review with processed data",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Wire up review-to-results flow",
+      "description": "As a user, I want approved items posted to Linear and then see results.",
+      "acceptanceCriteria": [
+        "Approve button calls /api/post-to-linear with selected items",
+        "Shows posting progress indicator",
+        "Navigates to /results with posting results",
+        "Handles partial failures gracefully",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
