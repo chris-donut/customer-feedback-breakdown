@@ -51,7 +51,7 @@ export function QuickFilters({
         id: "all",
         label: "All",
         icon: (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         ),
@@ -64,7 +64,7 @@ export function QuickFilters({
         id: "bugs",
         label: "Bugs",
         icon: (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         ),
@@ -76,7 +76,7 @@ export function QuickFilters({
         id: "high-confidence",
         label: "High Confidence",
         icon: (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         ),
@@ -89,7 +89,7 @@ export function QuickFilters({
         id: "needs-review",
         label: "Needs Review",
         icon: (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
@@ -129,8 +129,9 @@ export function QuickFilters({
             className={`
               inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
               transition-all duration-200
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-zinc-800
               ${activeFilter === btn.id
-                ? `${btn.colorClass} ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800 ring-current`
+                ? `${btn.colorClass} ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800 ring-blue-500`
                 : btn.colorClass
               }
             `}
@@ -147,7 +148,7 @@ export function QuickFilters({
         <button
           type="button"
           onClick={handleSelectFiltered}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+          className="text-xs text-blue-600 dark:text-blue-400 hover:underline focus:underline font-medium px-3 py-2 -my-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-800"
         >
           Select all filtered →
         </button>
