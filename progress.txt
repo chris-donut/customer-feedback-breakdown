@@ -8,7 +8,7 @@
 - mammoth library uses `mammoth.extractRawText({ buffer })` for Word parsing
 - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
 - Use `parseDocument(buffer, filename, mimeType?)` from lib/parsers for files, `parseGoogleSheetToFeedback(url)` for Google Sheets
-- AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON
+- AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON. Uses lazy initialization to avoid build errors when OPENAI_API_KEY is not set.
 - Processing pipeline: `import { processFeedback } from "@/lib/services/process-feedback"` - takes FeedbackItem[], returns ProcessedFeedback[]
 - Linear client: `import { createIssue, listTeams, listLabels } from "@/lib/linear/client"` - createIssue returns { success, issue?, url?, error? }
 - Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
@@ -255,4 +255,17 @@ Thread: https://ampcode.com/threads/T-019bb4ab-c2d9-722a-91b8-42c281f7a71f
   - Use request.json() for JSON body parsing in Next.js App Router
   - Validate URL format before calling parser to give clear error messages
   - Consistent response format with upload route: success, itemCount, items
+---
+
+## 2026-01-12 - US-018
+Thread: https://ampcode.com/threads/T-019bb4ad-07fd-74aa-967c-3f6cd8f4a3af
+- Created app/api/process/route.ts for feedback processing endpoint
+- Accepts POST with { items: FeedbackItem[] } JSON body
+- Validates items array structure (id and originalText required)
+- Calls processFeedback pipeline and returns ProcessedFeedback[]
+- Fixed OpenAI client to use lazy initialization (getOpenAI()) to avoid build errors
+- Files changed: src/app/api/process/route.ts, src/lib/ai/client.ts
+- **Learnings for future iterations:**
+  - OpenAI client must use lazy initialization to avoid build-time errors when env var is missing
+  - API route response format: { success, itemCount, items } for consistency with upload/parse-sheet routes
 ---
