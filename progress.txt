@@ -14,6 +14,7 @@
 - Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
 - API routes: `src/app/api/{endpoint}/route.ts` with POST handler, use `request.formData()` for multipart, `request.json()` for JSON body
 - UI components in `src/components/` with "use client" directive; FileUpload: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
+- SheetUrlInput: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
 
 ---
 
@@ -298,4 +299,19 @@ Thread: https://ampcode.com/threads/T-019bb4af-ec18-7022-b6ae-c852ddd29ce6
   - FileUpload component: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
   - Use "use client" directive for React hooks in Next.js App Router
   - File validation uses both extension and MIME type for robustness
+---
+
+## 2026-01-12 - US-021
+Thread: https://ampcode.com/threads/T-019bb502-3dcc-73de-b354-c52cf27fd9a9
+- Created components/SheetUrlInput.tsx with Google Sheets URL input
+- Text input with placeholder showing expected URL format
+- URL validation using regex for Google Sheets URL pattern
+- Error display for invalid URLs (empty, wrong format)
+- Import button with loading state and icon
+- Helper text indicating sheet must be publicly accessible
+- Files changed: src/components/SheetUrlInput.tsx
+- **Learnings for future iterations:**
+  - SheetUrlInput component: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
+  - Google Sheets URL regex: `/^https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/`
+  - Keep consistent styling patterns with FileUpload (border colors, focus rings, error styling)
 ---
