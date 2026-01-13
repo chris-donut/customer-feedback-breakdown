@@ -12,6 +12,7 @@
 - Processing pipeline: `import { processFeedback } from "@/lib/services/process-feedback"` - takes FeedbackItem[], returns ProcessedFeedback[]
 - Linear client: `import { createIssue, listTeams, listLabels } from "@/lib/linear/client"` - createIssue returns { success, issue?, url?, error? }
 - Linear poster: `import { postToLinear, summarizeResults } from "@/lib/services/linear-poster"` - postToLinear(items, options?) returns PostResult[]
+- API routes: `src/app/api/{endpoint}/route.ts` with POST handler, use `request.formData()` for multipart, `request.json()` for JSON body
 
 ---
 
@@ -227,4 +228,17 @@ Thread: https://ampcode.com/threads/T-019bb4a8-f7d2-76ad-a72b-65c71a48c834
   - Use Map to cache label lookups for unique categories to avoid redundant API calls
   - Linear issue description supports Markdown formatting
   - Label matching should be flexible: try exact match, then partial match, then category name
+---
+
+## 2026-01-12 - US-016
+Thread: https://ampcode.com/threads/T-019bb4aa-56b5-746c-91fd-ecf78fafa6e6
+- Created app/api/upload/route.ts for document upload endpoint
+- Accepts POST with multipart form data (file field)
+- Validates file type using detectFileType from lib/parsers
+- Calls parseDocument and returns FeedbackItem[] in JSON response
+- Files changed: src/app/api/upload/route.ts
+- **Learnings for future iterations:**
+  - Next.js App Router uses request.formData() to access multipart form data
+  - File from FormData has .arrayBuffer() method to convert to Buffer
+  - Use detectFileType(filename, mimeType) for validation before parsing
 ---
