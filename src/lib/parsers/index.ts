@@ -85,7 +85,7 @@ export async function parseDocument(
       return textBlocksToFeedbackItems(result.textBlocks);
     }
     case "word": {
-      const result = await parseWord(buffer);
+      const result = await parseWord(buffer, filename);
       return textBlocksToFeedbackItems(result.textBlocks);
     }
     case "excel":
