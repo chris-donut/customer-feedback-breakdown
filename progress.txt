@@ -16,6 +16,8 @@
 - UI components in `src/components/` with "use client" directive; FileUpload: `import { FileUpload } from "@/components/FileUpload"` with props: onFileSelect, isUploading?, disabled?
 - SheetUrlInput: `import { SheetUrlInput } from "@/components/SheetUrlInput"` with props: onImport, isLoading?, disabled?
 - Upload page layout: rounded-xl bordered sections, "or" divider between upload methods, global loading banner with isProcessing state
+- FeedbackTable: `import { FeedbackTable } from "@/components/FeedbackTable"` with props: items (ProcessedFeedback[]), selectedIds (Set<string>), onSelectionChange ((ids: Set<string>) => void)
+- FeedbackTable uses color-coded confidence badges (green >=90%, emerald >=80%, yellow >=70%, orange >=50%, red <50%) and category badges
 
 ---
 
@@ -328,4 +330,19 @@ Thread: https://ampcode.com/threads/T-019bb503-b3ed-761c-9bea-a21c1d37c540
 - **Learnings for future iterations:**
   - Use isProcessing = isFileUploading || isSheetLoading to disable both inputs during any processing
   - Divider pattern: relative container with absolute border-t and centered "or" span with bg color
+---
+
+## 2026-01-12 - US-023
+Thread: https://ampcode.com/threads/T-019bb509-f5c1-712f-83ac-3d3a8fb688cf
+- Created components/FeedbackTable.tsx for feedback review table
+- Table columns: Select (checkbox), Original Text, Generated Title, Category, Confidence
+- Checkbox for bulk selection with select all / deselect all (supports indeterminate state)
+- Confidence shown as percentage with color-coded indicator (green/emerald/yellow/orange/red)
+- Category badges with distinct colors per type (Bug=red, Feature Request=blue, etc.)
+- Uses controlled selection via selectedIds Set and onSelectionChange callback
+- Files changed: src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - Use `ref` callback with `el.indeterminate = someSelected` for checkbox indeterminate state
+  - Color-coded confidence: >=90% green, >=80% emerald, >=70% yellow, >=50% orange, <50% red
+  - Table uses ProcessedFeedback type from lib/services/process-feedback
 ---
