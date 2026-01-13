@@ -120,10 +120,24 @@ function ReviewPageContent() {
         body: JSON.stringify({ items: selectedItems }),
       });
 
-      const data = await response.json();
+      const text = await response.text();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to post to Linear");
+        let errorMessage = "Failed to post to Linear";
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Invalid response from server");
       }
 
       // Store results in sessionStorage to avoid URL length limits
