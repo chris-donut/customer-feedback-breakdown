@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  parseGoogleSheetToFeedback,
-  parseGoogleSheet,
-} from "@/lib/parsers";
-import { extractSheetId } from "@/lib/parsers/gsheet-parser";
+import { parseGoogleSheet, extractSheetId } from "@/lib/parsers/gsheet-parser";
+
+// Generate unique feedback item ID
+function generateId(): string {
+  return `fb_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+// Convert sheet rows to feedback items
+function rowsToFeedbackItems(rows: string[][]) {
+  return rows
+    .map((row) => {
+      const text = row.filter((cell) => cell.length > 0).join(" - ");
+      return text.trim();
+    })
+    .filter((text) => text.length > 0)
+    .map((text) => ({
+      id: generateId(),
+      originalText: text,
+    }));
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +45,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const feedbackItems = await parseGoogleSheetToFeedback(trimmedUrl);
+    const sheetData = await parseGoogleSheet(trimmedUrl);
+    const feedbackItems = rowsToFeedbackItems(sheetData.rows);
 
     return NextResponse.json({
       success: true,
