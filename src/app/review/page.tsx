@@ -18,6 +18,7 @@ import {
   moveToHistory,
   getPostedHistory,
   getPostedTextMap,
+  clearCurrentFeedback,
   type HistoryEntry,
 } from "@/lib/feedback-storage";
 
@@ -217,6 +218,15 @@ function ReviewPageContent() {
     });
   }, []);
 
+  const handleClearAll = useCallback(() => {
+    if (window.confirm("Are you sure you want to clear all feedback items? This cannot be undone.")) {
+      clearCurrentFeedback();
+      setItems([]);
+      setSelectedIds(new Set());
+      setEditedIds(new Set());
+    }
+  }, []);
+
   const selectedCount = selectedIds.size;
   const totalCount = items.length;
 
@@ -294,16 +304,25 @@ function ReviewPageContent() {
 
           {/* Uncommitted items status */}
           {items.length > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  {items.length} uncommitted item{items.length !== 1 ? "s" : ""} pending
+            <div className="flex items-center justify-between gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    {items.length} uncommitted item{items.length !== 1 ? "s" : ""} pending
+                  </span>
+                </div>
+                <span className="text-xs text-amber-600 dark:text-amber-400">
+                  These items will persist until posted to Linear or removed
                 </span>
               </div>
-              <span className="text-xs text-amber-600 dark:text-amber-400">
-                These items will persist until posted to Linear or removed
-              </span>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="text-xs px-3 py-1.5 rounded-md bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors font-medium"
+              >
+                Clear All
+              </button>
             </div>
           )}
         </header>
