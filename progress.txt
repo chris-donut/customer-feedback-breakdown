@@ -346,3 +346,18 @@ Thread: https://ampcode.com/threads/T-019bb509-f5c1-712f-83ac-3d3a8fb688cf
   - Color-coded confidence: >=90% green, >=80% emerald, >=70% yellow, >=50% orange, <50% red
   - Table uses ProcessedFeedback type from lib/services/process-feedback
 ---
+
+## 2026-01-12 - US-024
+Thread: https://ampcode.com/threads/T-019bb510-d0f3-764e-9b88-bac636f31319
+- Added inline editing to FeedbackTable component
+- EditableTitleCell: click-to-edit title field with Enter to save, Escape to cancel
+- CategoryDropdown: styled select with all FEEDBACK_CATEGORIES options
+- New props: onItemUpdate callback for changes, editedIds Set for visual indicator
+- Visual indicator: amber dot next to edited fields, amber row background tint
+- Backward compatible: if onItemUpdate not provided, shows read-only display
+- Files changed: src/components/FeedbackTable.tsx
+- **Learnings for future iterations:**
+  - FeedbackTable props: add `onItemUpdate?: (itemId, updates) => void` and `editedIds?: Set<string>` for inline editing
+  - Use `useRef` with focus() on mount for click-to-edit input fields
+  - Select dropdown styling: use inline SVG for chevron icon via backgroundImage
+---
