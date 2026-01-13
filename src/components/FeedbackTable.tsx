@@ -16,7 +16,7 @@ export interface FeedbackTableProps {
   items: ProcessedFeedback[];
   selectedIds: Set<string>;
   onSelectionChange: (selectedIds: Set<string>) => void;
-  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority">>) => void;
+  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority" | "sourceUrl">>) => void;
   editedIds?: Set<string>;
   postedMap?: Map<string, HistoryEntry>;
   onDeleteItem?: (itemId: string) => void;
@@ -168,6 +168,99 @@ function EditableTitle({ value, onChange, isEdited }: EditableTitleProps) {
   );
 }
 
+interface EditableSourceUrlProps {
+  value: string;
+  onChange: (newValue: string) => void;
+}
+
+function EditableSourceUrl({ value, onChange }: EditableSourceUrlProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = useCallback(() => {
+    const trimmed = editValue.trim();
+    if (trimmed !== value) {
+      onChange(trimmed);
+    }
+    setIsEditing(false);
+  }, [editValue, value, onChange]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSave();
+      } else if (e.key === "Escape") {
+        setEditValue(value);
+        setIsEditing(false);
+      }
+    },
+    [handleSave, value]
+  );
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="url"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={handleKeyDown}
+        placeholder="https://example.com/feedback-source"
+        className="w-full px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-900 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      />
+    );
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-2 group">
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all inline-flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value.length > 50 ? value.substring(0, 50) + "..." : value}
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+        <button
+          type="button"
+          onClick={() => setIsEditing(true)}
+          className="opacity-0 group-hover:opacity-100 text-xs text-zinc-400 hover:text-blue-500 transition-all"
+        >
+          Edit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className="text-sm text-zinc-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+      Add source URL
+    </button>
+  );
+}
+
 interface IssueTypeSelectorProps {
   value: IssueType;
   onChange: (newValue: IssueType) => void;
@@ -275,6 +368,7 @@ interface FeedbackCardProps {
   onIssueTypeChange?: (newType: IssueType) => void;
   onIssueSourceChange?: (newSource: IssueSource) => void;
   onPriorityChange?: (newPriority: Priority) => void;
+  onSourceUrlChange?: (newUrl: string) => void;
   postedEntry?: HistoryEntry;
   onDelete?: () => void;
 }
@@ -288,6 +382,7 @@ function FeedbackCard({
   onIssueTypeChange,
   onIssueSourceChange,
   onPriorityChange,
+  onSourceUrlChange,
   postedEntry,
   onDelete,
 }: FeedbackCardProps) {
@@ -463,6 +558,35 @@ function FeedbackCard({
             {item.originalText}
           </p>
         </div>
+
+        {/* Source URL */}
+        <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700/50">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              Source URL
+            </span>
+            {onSourceUrlChange ? (
+              <EditableSourceUrl
+                value={item.sourceUrl || ""}
+                onChange={onSourceUrlChange}
+              />
+            ) : item.sourceUrl ? (
+              <a
+                href={item.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+              >
+                {item.sourceUrl.length > 50 ? item.sourceUrl.substring(0, 50) + "..." : item.sourceUrl}
+                <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            ) : (
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">Not set</span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -556,6 +680,13 @@ export function FeedbackTable({
     [onItemUpdate]
   );
 
+  const handleSourceUrlChange = useCallback(
+    (itemId: string, newUrl: string) => {
+      onItemUpdate?.(itemId, { sourceUrl: newUrl });
+    },
+    [onItemUpdate]
+  );
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -630,6 +761,7 @@ export function FeedbackTable({
             onIssueTypeChange={onItemUpdate ? (newType) => handleIssueTypeChange(item.id, newType) : undefined}
             onIssueSourceChange={onItemUpdate ? (newSource) => handleIssueSourceChange(item.id, newSource) : undefined}
             onPriorityChange={onItemUpdate ? (newPriority) => handlePriorityChange(item.id, newPriority) : undefined}
+            onSourceUrlChange={onItemUpdate ? (newUrl) => handleSourceUrlChange(item.id, newUrl) : undefined}
             postedEntry={postedMap.get(item.originalText)}
             onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
           />
