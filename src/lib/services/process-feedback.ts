@@ -1,19 +1,10 @@
 import { type FeedbackItem } from "@/lib/parsers";
 import { generateTitle, type TitleGeneratorOptions } from "./title-generator";
-import {
-  categorize,
-  type CategorizationOptions,
-  type FeedbackCategory,
-} from "./categorizer";
+import { categorize, type CategorizationOptions } from "./categorizer";
 import { readContext } from "@/lib/context-storage";
+import { type ProcessedFeedback } from "@/lib/types";
 
-export interface ProcessedFeedback {
-  id: string;
-  originalText: string;
-  generatedTitle: string;
-  category: FeedbackCategory;
-  confidence: number;
-}
+export { type ProcessedFeedback };
 
 export interface ProcessFeedbackOptions {
   titleOptions?: Omit<TitleGeneratorOptions, "context">;

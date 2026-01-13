@@ -1,22 +1,8 @@
 import { generateJSON } from "@/lib/ai/client";
 import { readContext } from "@/lib/context-storage";
+import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/types";
 
-export type FeedbackCategory =
-  | "Bug"
-  | "Feature Request"
-  | "UI/UX Issue"
-  | "AI Hallucination"
-  | "New Feature"
-  | "Documentation";
-
-export const FEEDBACK_CATEGORIES: FeedbackCategory[] = [
-  "Bug",
-  "Feature Request",
-  "UI/UX Issue",
-  "AI Hallucination",
-  "New Feature",
-  "Documentation",
-];
+export { FEEDBACK_CATEGORIES, type FeedbackCategory };
 
 export interface CategorizationResult {
   category: FeedbackCategory;

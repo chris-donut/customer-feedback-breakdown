@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
-import type { ProcessedFeedback } from "@/lib/services/process-feedback";
-import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/services/categorizer";
+import {
+  FEEDBACK_CATEGORIES,
+  type FeedbackCategory,
+  type ProcessedFeedback,
+} from "@/lib/types";
 
 export interface FeedbackTableProps {
   items: ProcessedFeedback[];
