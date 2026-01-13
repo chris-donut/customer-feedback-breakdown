@@ -429,6 +429,12 @@ export function FeedbackTable({
   onItemUpdate,
   editedIds = new Set(),
 }: FeedbackTableProps) {
+  // Sort items by confidence (high to low) so low confidence items appear at the bottom
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => b.confidence - a.confidence),
+    [items]
+  );
+
   const allSelected = useMemo(
     () => items.length > 0 && items.every((item) => selectedIds.has(item.id)),
     [items, selectedIds]
@@ -551,9 +557,9 @@ export function FeedbackTable({
         </span>
       </div>
 
-      {/* Cards grid */}
+      {/* Cards grid - sorted by confidence (high to low) */}
       <div className="grid gap-4">
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <FeedbackCard
             key={item.id}
             item={item}
