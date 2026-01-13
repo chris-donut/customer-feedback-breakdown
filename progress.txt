@@ -382,3 +382,19 @@ Thread: https://ampcode.com/threads/T-019bb512-b5f9-71da-8ffb-705de6b532a4
   - Keep shared types in lib/types.ts to avoid importing server-only modules (fs, path) into client components
   - Review page reads data from URL query param: `/review?data=${encodeURIComponent(JSON.stringify(processedItems))}`
 ---
+
+## 2026-01-12 - US-026
+Thread: https://ampcode.com/threads/T-019bb516-f050-72df-8708-bd476ed006a6
+- Created app/results/page.tsx with results display after Linear posting
+- Shows total items processed, successful, and failed counts in summary cards
+- Displays category breakdown with color-coded badges (consistent with review page)
+- Lists all created Linear issues with clickable external links
+- Shows failed items section with error messages if any
+- "Start New Upload" button to return to home page
+- Uses Suspense boundary for useSearchParams (Next.js 16 requirement)
+- Files changed: src/app/results/page.tsx
+- **Learnings for future iterations:**
+  - Results page receives data from review page via URL query param: `/results?data=${encodeURIComponent(JSON.stringify(apiResponse))}`
+  - API response structure: `{ success, results: PostResult[], summary: PostSummary }`
+  - Reuse getCategoryColor function pattern from review page for consistent styling
+---

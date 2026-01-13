@@ -99,11 +99,17 @@ type FeedbackCategory =
 ## Environment Variables
 
 ```bash
+# AI Provider (choose one)
+ANTHROPIC_API_KEY=     # Anthropic API key (uses Claude Sonnet 4)
+OPENAI_API_KEY=        # OpenAI API key (uses GPT-4o-mini)
+
+# Other
 CONTEXT_FILE_PATH=     # Path to project context JSON (default: project-context.json)
-OPENAI_API_KEY=        # OpenAI API key for AI processing
 LINEAR_API_KEY=        # Linear API key for issue creation
 LINEAR_TEAM_ID=        # Target Linear team ID
 ```
+
+**Note:** If both API keys are set, Anthropic takes priority.
 
 ## Data Flow
 

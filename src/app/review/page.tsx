@@ -56,10 +56,15 @@ function ReviewPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Try sessionStorage first, then fall back to URL params
+    const storedData = sessionStorage.getItem("feedbackData");
     const dataParam = searchParams.get("data");
-    if (dataParam) {
+
+    const dataString = storedData || (dataParam ? decodeURIComponent(dataParam) : null);
+
+    if (dataString) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(dataParam));
+        const parsed = JSON.parse(dataString);
         if (Array.isArray(parsed)) {
           setItems(parsed);
           const highConfidenceIds = new Set(
@@ -68,6 +73,10 @@ function ReviewPageContent() {
               .map((item: ProcessedFeedback) => item.id)
           );
           setSelectedIds(highConfidenceIds);
+        }
+        // Clear sessionStorage after reading
+        if (storedData) {
+          sessionStorage.removeItem("feedbackData");
         }
       } catch {
         setError("Failed to parse feedback data.");
@@ -117,7 +126,9 @@ function ReviewPageContent() {
         throw new Error(data.error || "Failed to post to Linear");
       }
 
-      router.push(`/results?data=${encodeURIComponent(JSON.stringify(data))}`);
+      // Store results in sessionStorage to avoid URL length limits
+      sessionStorage.setItem("resultsData", JSON.stringify(data));
+      router.push("/results");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {

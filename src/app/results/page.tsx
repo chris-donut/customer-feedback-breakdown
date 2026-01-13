@@ -69,11 +69,20 @@ function ResultsPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Try sessionStorage first, then fall back to URL params
+    const storedData = sessionStorage.getItem("resultsData");
     const dataParam = searchParams.get("data");
-    if (dataParam) {
+
+    const dataString = storedData || (dataParam ? decodeURIComponent(dataParam) : null);
+
+    if (dataString) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(dataParam));
+        const parsed = JSON.parse(dataString);
         setData(parsed);
+        // Clear sessionStorage after reading
+        if (storedData) {
+          sessionStorage.removeItem("resultsData");
+        }
       } catch {
         setError("Failed to parse results data.");
       }
