@@ -429,9 +429,21 @@ export function FeedbackTable({
   onItemUpdate,
   editedIds = new Set(),
 }: FeedbackTableProps) {
-  // Sort items by confidence (high to low) so low confidence items appear at the bottom
+  // Sort items by priority (high priority first), then by confidence (high to low)
+  // Priority: 1=Urgent, 2=High, 3=Medium, 4=Low, 0=None (treat 0 as lowest)
   const sortedItems = useMemo(
-    () => [...items].sort((a, b) => b.confidence - a.confidence),
+    () => [...items].sort((a, b) => {
+      // Convert priority 0 to 5 for sorting (so "No priority" appears last)
+      const priorityA = a.priority === 0 ? 5 : (a.priority ?? 5);
+      const priorityB = b.priority === 0 ? 5 : (b.priority ?? 5);
+
+      // Sort by priority first (lower number = higher priority)
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      // Then by confidence (higher confidence first)
+      return b.confidence - a.confidence;
+    }),
     [items]
   );
 

@@ -45,6 +45,7 @@ export function QuickFilters({
 }: QuickFiltersProps) {
   const filterButtons: FilterButton[] = useMemo(() => {
     const bugItems = items.filter((i) => i.issueType === "Bug" || i.category === "Bug");
+    const highPriority = items.filter((i) => i.priority === 1 || i.priority === 2); // Urgent or High
     const highConfidence = items.filter((i) => i.confidence >= 0.9);
     const lowConfidence = items.filter((i) => i.confidence < 0.7);
 
@@ -61,6 +62,19 @@ export function QuickFilters({
         filter: (i) => i,
         colorClass:
           "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700",
+      },
+      {
+        id: "high-priority",
+        label: "High Priority",
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        ),
+        count: highPriority.length,
+        filter: (i) => i.filter((item) => item.priority === 1 || item.priority === 2),
+        colorClass:
+          "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60",
       },
       {
         id: "bugs",
