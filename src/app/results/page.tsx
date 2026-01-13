@@ -5,8 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ProgressStepper } from "@/components/ProgressStepper";
 import {
-  FEEDBACK_CATEGORIES,
-  type FeedbackCategory,
+  type IssueType,
 } from "@/lib/types";
 
 interface PostResult {
@@ -21,7 +20,7 @@ interface PostSummary {
   total: number;
   successful: number;
   failed: number;
-  byCategory: Record<FeedbackCategory, number>;
+  byIssueType: Record<string, number>;
 }
 
 interface ResultsData {
@@ -30,20 +29,22 @@ interface ResultsData {
   summary: PostSummary;
 }
 
-function getCategoryColor(category: FeedbackCategory): string {
-  switch (category) {
+function getIssueTypeColor(type: IssueType | string): string {
+  switch (type) {
     case "Bug":
       return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
-    case "Feature Request":
+    case "Feature":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
-    case "UI/UX Issue":
+    case "Improvement":
+      return "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300";
+    case "Design":
       return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
-    case "AI Hallucination":
+    case "Security":
       return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
-    case "New Feature":
-      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
-    case "Documentation":
-      return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+    case "Infrastructure":
+      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    case "gtm":
+      return "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300";
     default:
       return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
   }
@@ -216,27 +217,26 @@ function ResultsPageContent() {
           </div>
 
           <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-3">
-            Breakdown by Category
+            Breakdown by Issue Type
           </h3>
           <div className="flex flex-wrap gap-3">
-            {FEEDBACK_CATEGORIES.map((category) => {
-              const count = summary.byCategory[category];
+            {Object.entries(summary.byIssueType).map(([issueType, count]) => {
               if (count === 0) return null;
               return (
                 <div
-                  key={category}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getCategoryColor(category)}`}
+                  key={issueType}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getIssueTypeColor(issueType)}`}
                 >
-                  <span>{category}</span>
+                  <span>{issueType}</span>
                   <span className="bg-white/30 dark:bg-black/20 px-1.5 py-0.5 rounded text-xs font-bold">
                     {count}
                   </span>
                 </div>
               );
             })}
-            {Object.values(summary.byCategory).every((v) => v === 0) && (
+            {Object.keys(summary.byIssueType).length === 0 && (
               <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                No categories recorded
+                No issue types recorded
               </span>
             )}
           </div>

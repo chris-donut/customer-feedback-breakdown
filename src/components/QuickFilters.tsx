@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { FeedbackCategory, ProcessedFeedback } from "@/lib/types";
+import type { IssueType, ProcessedFeedback } from "@/lib/types";
 
 export interface QuickFiltersProps {
   items: ProcessedFeedback[];
@@ -20,18 +20,20 @@ interface FilterButton {
   colorClass: string;
 }
 
-const CATEGORY_COLORS: Record<FeedbackCategory, string> = {
+const ISSUE_TYPE_COLORS: Record<IssueType, string> = {
   Bug: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60",
-  "Feature Request":
+  Feature:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60",
-  "UI/UX Issue":
+  Improvement:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-900/60",
+  Design:
     "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60",
-  "AI Hallucination":
+  Security:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/60",
-  "New Feature":
-    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/60",
-  Documentation:
-    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700",
+  Infrastructure:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
+  gtm:
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 hover:bg-pink-200 dark:hover:bg-pink-900/60",
 };
 
 export function QuickFilters({
@@ -42,7 +44,7 @@ export function QuickFilters({
   onFilterChange,
 }: QuickFiltersProps) {
   const filterButtons: FilterButton[] = useMemo(() => {
-    const bugItems = items.filter((i) => i.category === "Bug");
+    const bugItems = items.filter((i) => i.issueType === "Bug" || i.category === "Bug");
     const highConfidence = items.filter((i) => i.confidence >= 0.9);
     const lowConfidence = items.filter((i) => i.confidence < 0.7);
 
@@ -69,8 +71,8 @@ export function QuickFilters({
           </svg>
         ),
         count: bugItems.length,
-        filter: (i) => i.filter((item) => item.category === "Bug"),
-        colorClass: CATEGORY_COLORS.Bug,
+        filter: (i) => i.filter((item) => item.issueType === "Bug" || item.category === "Bug"),
+        colorClass: ISSUE_TYPE_COLORS.Bug,
       },
       {
         id: "high-confidence",

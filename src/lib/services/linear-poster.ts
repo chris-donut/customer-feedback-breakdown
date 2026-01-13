@@ -1,6 +1,10 @@
-import { createIssue, listLabels, type LabelInfo } from "@/lib/linear/client";
+import { createIssue } from "@/lib/linear/client";
 import { type ProcessedFeedback } from "./process-feedback";
-import { type FeedbackCategory } from "./categorizer";
+import {
+  LINEAR_STATE_IDS,
+  LINEAR_ISSUE_TYPE_IDS,
+  LINEAR_ISSUE_SOURCE_IDS,
+} from "@/lib/types";
 
 export interface PostResult {
   feedbackId: string;
@@ -14,64 +18,33 @@ export interface PostToLinearOptions {
   teamId?: string;
 }
 
-const CATEGORY_LABEL_MAP: Record<FeedbackCategory, string> = {
-  Bug: "Bug",
-  "Feature Request": "Feature",
-  "UI/UX Issue": "UX",
-  "AI Hallucination": "AI",
-  "New Feature": "Feature",
-  Documentation: "Documentation",
-};
-
-async function findOrMatchLabel(
-  category: FeedbackCategory,
-  availableLabels: LabelInfo[]
-): Promise<string | undefined> {
-  const preferredName = CATEGORY_LABEL_MAP[category];
-  const lowerPreferred = preferredName.toLowerCase();
-
-  const exactMatch = availableLabels.find(
-    (l) => l.name.toLowerCase() === lowerPreferred
-  );
-  if (exactMatch) {
-    return exactMatch.id;
-  }
-
-  const partialMatch = availableLabels.find(
-    (l) =>
-      l.name.toLowerCase().includes(lowerPreferred) ||
-      lowerPreferred.includes(l.name.toLowerCase())
-  );
-  if (partialMatch) {
-    return partialMatch.id;
-  }
-
-  const categoryMatch = availableLabels.find(
-    (l) => l.name.toLowerCase() === category.toLowerCase()
-  );
-  if (categoryMatch) {
-    return categoryMatch.id;
-  }
-
-  return undefined;
-}
-
 async function postSingleFeedback(
   item: ProcessedFeedback,
-  labelMap: Map<FeedbackCategory, string | undefined>,
   options: PostToLinearOptions
 ): Promise<PostResult> {
-  const labelId = labelMap.get(item.category);
-  const labelIds = labelId ? [labelId] : undefined;
+  // Build label IDs from issue type and issue source
+  const labelIds: string[] = [];
+  if (item.issueType && LINEAR_ISSUE_TYPE_IDS[item.issueType]) {
+    labelIds.push(LINEAR_ISSUE_TYPE_IDS[item.issueType]);
+  }
+  if (item.issueSource && LINEAR_ISSUE_SOURCE_IDS[item.issueSource]) {
+    labelIds.push(LINEAR_ISSUE_SOURCE_IDS[item.issueSource]);
+  }
 
-  const description = `**Original Feedback:**\n\n${item.originalText}\n\n---\n*Category: ${item.category} (${Math.round(item.confidence * 100)}% confidence)*`;
+  // Get state ID from workflow state
+  const stateId = item.state ? LINEAR_STATE_IDS[item.state] : undefined;
+
+  const description = `**Original Feedback:**\n\n${item.originalText}\n\n---\n*Issue Type: ${item.issueType} | Source: ${item.issueSource} | Confidence: ${Math.round(item.confidence * 100)}%*`;
 
   try {
     const result = await createIssue({
       title: item.generatedTitle,
       description,
       teamId: options.teamId,
-      labelIds,
+      labelIds: labelIds.length > 0 ? labelIds : undefined,
+      stateId,
+      priority: item.priority,
+      projectId: item.projectId,
     });
 
     if (result.success && result.issue) {
@@ -105,18 +78,9 @@ export async function postToLinear(
     return [];
   }
 
-  const availableLabels = await listLabels(options.teamId);
-
-  const uniqueCategories = [...new Set(items.map((item) => item.category))];
-  const labelMap = new Map<FeedbackCategory, string | undefined>();
-
-  for (const category of uniqueCategories) {
-    const labelId = await findOrMatchLabel(category, availableLabels);
-    labelMap.set(category, labelId);
-  }
-
+  // Use hardcoded Linear IDs from types.ts, no need to fetch labels
   const results = await Promise.all(
-    items.map((item) => postSingleFeedback(item, labelMap, options))
+    items.map((item) => postSingleFeedback(item, options))
   );
 
   return results;
@@ -126,25 +90,19 @@ export interface PostSummary {
   total: number;
   successful: number;
   failed: number;
-  byCategory: Record<FeedbackCategory, number>;
+  byIssueType: Record<string, number>;
 }
 
 export function summarizeResults(results: PostResult[], items: ProcessedFeedback[]): PostSummary {
   const itemMap = new Map(items.map((i) => [i.id, i]));
-  const byCategory: Record<FeedbackCategory, number> = {
-    Bug: 0,
-    "Feature Request": 0,
-    "UI/UX Issue": 0,
-    "AI Hallucination": 0,
-    "New Feature": 0,
-    Documentation: 0,
-  };
+  const byIssueType: Record<string, number> = {};
 
   for (const result of results) {
     if (result.success) {
       const item = itemMap.get(result.feedbackId);
       if (item) {
-        byCategory[item.category]++;
+        const type = item.issueType || item.category;
+        byIssueType[type] = (byIssueType[type] || 0) + 1;
       }
     }
   }
@@ -153,6 +111,6 @@ export function summarizeResults(results: PostResult[], items: ProcessedFeedback
     total: results.length,
     successful: results.filter((r) => r.success).length,
     failed: results.filter((r) => !r.success).length,
-    byCategory,
+    byIssueType,
   };
 }

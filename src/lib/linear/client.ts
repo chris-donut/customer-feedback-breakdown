@@ -12,6 +12,9 @@ export interface CreateIssueInput {
   description?: string;
   teamId?: string;
   labelIds?: string[];
+  stateId?: string;
+  priority?: number;
+  projectId?: string;
 }
 
 export interface CreateIssueResult {
@@ -39,6 +42,9 @@ export async function createIssue(
       description: input.description,
       teamId,
       labelIds: input.labelIds,
+      stateId: input.stateId,
+      priority: input.priority,
+      projectId: input.projectId,
     });
 
     const issue = await issuePayload.issue;

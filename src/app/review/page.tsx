@@ -7,27 +7,29 @@ import { FeedbackTable } from "@/components/FeedbackTable";
 import { ProgressStepper } from "@/components/ProgressStepper";
 import { QuickFilters } from "@/components/QuickFilters";
 import {
-  FEEDBACK_CATEGORIES,
-  type FeedbackCategory,
+  ISSUE_TYPES,
+  type IssueType,
   type ProcessedFeedback,
 } from "@/lib/types";
 
 const CONFIDENCE_THRESHOLD = 0.8;
 
-function getCategoryColor(category: FeedbackCategory): string {
-  switch (category) {
+function getIssueTypeColor(type: IssueType | string): string {
+  switch (type) {
     case "Bug":
       return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
-    case "Feature Request":
+    case "Feature":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
-    case "UI/UX Issue":
+    case "Improvement":
+      return "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300";
+    case "Design":
       return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
-    case "AI Hallucination":
+    case "Security":
       return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
-    case "New Feature":
-      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
-    case "Documentation":
-      return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+    case "Infrastructure":
+      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    case "gtm":
+      return "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300";
     default:
       return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
   }
@@ -87,13 +89,16 @@ function ReviewPageContent() {
     }
   }, [searchParams]);
 
-  const categoryDistribution = useMemo(() => {
-    const distribution: Record<FeedbackCategory, number> = {} as Record<FeedbackCategory, number>;
-    for (const category of FEEDBACK_CATEGORIES) {
-      distribution[category] = 0;
+  const issueTypeDistribution = useMemo(() => {
+    const distribution: Record<IssueType, number> = {} as Record<IssueType, number>;
+    for (const type of ISSUE_TYPES) {
+      distribution[type] = 0;
     }
     for (const item of items) {
-      distribution[item.category] = (distribution[item.category] || 0) + 1;
+      const type = item.issueType || item.category;
+      if (type) {
+        distribution[type as IssueType] = (distribution[type as IssueType] || 0) + 1;
+      }
     }
     return distribution;
   }, [items]);
@@ -204,18 +209,18 @@ function ReviewPageContent() {
 
         <section className="mb-6 p-6 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-            Category Distribution
+            Issue Type Distribution
           </h2>
           <div className="flex flex-wrap gap-3">
-            {FEEDBACK_CATEGORIES.map((category) => {
-              const count = categoryDistribution[category];
+            {ISSUE_TYPES.map((issueType) => {
+              const count = issueTypeDistribution[issueType];
               if (count === 0) return null;
               return (
                 <div
-                  key={category}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getCategoryColor(category)}`}
+                  key={issueType}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getIssueTypeColor(issueType)}`}
                 >
-                  <span>{category}</span>
+                  <span>{issueType}</span>
                   <span className="bg-white/30 dark:bg-black/20 px-1.5 py-0.5 rounded text-xs font-bold">
                     {count}
                   </span>

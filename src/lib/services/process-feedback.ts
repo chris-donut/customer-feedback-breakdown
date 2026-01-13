@@ -30,6 +30,10 @@ export async function processFeedbackItem(
     generatedTitle,
     category: categorization.category,
     confidence: categorization.confidence,
+    issueType: categorization.issueType,
+    issueSource: categorization.issueSource,
+    priority: categorization.priority,
+    state: categorization.state,
   };
 }
 

@@ -2,8 +2,12 @@
 
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import {
-  FEEDBACK_CATEGORIES,
-  type FeedbackCategory,
+  ISSUE_TYPES,
+  ISSUE_SOURCES,
+  PRIORITIES,
+  type IssueType,
+  type IssueSource,
+  type Priority,
   type ProcessedFeedback,
 } from "@/lib/types";
 
@@ -11,7 +15,7 @@ export interface FeedbackTableProps {
   items: ProcessedFeedback[];
   selectedIds: Set<string>;
   onSelectionChange: (selectedIds: Set<string>) => void;
-  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category">>) => void;
+  onItemUpdate?: (itemId: string, updates: Partial<Pick<ProcessedFeedback, "generatedTitle" | "category" | "issueType" | "issueSource" | "priority">>) => void;
   editedIds?: Set<string>;
 }
 
@@ -31,44 +35,59 @@ function getConfidenceBar(confidence: number): string {
   return "bg-red-500";
 }
 
-// Category styling with distinctive icons and colors
-const CATEGORY_CONFIG: Record<FeedbackCategory, { bg: string; text: string; icon: string; border: string }> = {
+// Issue Type styling with distinctive icons and colors
+const ISSUE_TYPE_CONFIG: Record<IssueType, { bg: string; text: string; icon: string; border: string }> = {
   "Bug": {
     bg: "bg-red-50 dark:bg-red-950/40",
     text: "text-red-700 dark:text-red-300",
     border: "border-red-200 dark:border-red-800",
     icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
   },
-  "Feature Request": {
+  "Feature": {
     bg: "bg-blue-50 dark:bg-blue-950/40",
     text: "text-blue-700 dark:text-blue-300",
     border: "border-blue-200 dark:border-blue-800",
     icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
   },
-  "UI/UX Issue": {
+  "Improvement": {
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    text: "text-teal-700 dark:text-teal-300",
+    border: "border-teal-200 dark:border-teal-800",
+    icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+  },
+  "Design": {
     bg: "bg-purple-50 dark:bg-purple-950/40",
     text: "text-purple-700 dark:text-purple-300",
     border: "border-purple-200 dark:border-purple-800",
     icon: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
   },
-  "AI Hallucination": {
+  "Security": {
     bg: "bg-amber-50 dark:bg-amber-950/40",
     text: "text-amber-700 dark:text-amber-300",
     border: "border-amber-200 dark:border-amber-800",
-    icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+    icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
   },
-  "New Feature": {
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    text: "text-teal-700 dark:text-teal-300",
-    border: "border-teal-200 dark:border-teal-800",
-    icon: "M12 6v6m0 0v6m0-6h6m-6 0H6"
-  },
-  "Documentation": {
+  "Infrastructure": {
     bg: "bg-slate-50 dark:bg-slate-900/40",
     text: "text-slate-700 dark:text-slate-300",
     border: "border-slate-200 dark:border-slate-700",
-    icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    icon: "M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
   },
+  "gtm": {
+    bg: "bg-pink-50 dark:bg-pink-950/40",
+    text: "text-pink-700 dark:text-pink-300",
+    border: "border-pink-200 dark:border-pink-800",
+    icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+  },
+};
+
+// Priority styling
+const PRIORITY_CONFIG: Record<Priority, { bg: string; text: string; label: string }> = {
+  0: { bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-500 dark:text-zinc-400", label: "None" },
+  1: { bg: "bg-red-100 dark:bg-red-900/40", text: "text-red-700 dark:text-red-300", label: "Urgent" },
+  2: { bg: "bg-orange-100 dark:bg-orange-900/40", text: "text-orange-700 dark:text-orange-300", label: "High" },
+  3: { bg: "bg-yellow-100 dark:bg-yellow-900/40", text: "text-yellow-700 dark:text-yellow-300", label: "Medium" },
+  4: { bg: "bg-blue-100 dark:bg-blue-900/40", text: "text-blue-700 dark:text-blue-300", label: "Low" },
 };
 
 interface EditableTitleProps {
@@ -146,19 +165,19 @@ function EditableTitle({ value, onChange, isEdited }: EditableTitleProps) {
   );
 }
 
-interface CategorySelectorProps {
-  value: FeedbackCategory;
-  onChange: (newValue: FeedbackCategory) => void;
+interface IssueTypeSelectorProps {
+  value: IssueType;
+  onChange: (newValue: IssueType) => void;
 }
 
-function CategorySelector({ value, onChange }: CategorySelectorProps) {
-  const config = CATEGORY_CONFIG[value];
+function IssueTypeSelector({ value, onChange }: IssueTypeSelectorProps) {
+  const config = ISSUE_TYPE_CONFIG[value];
 
   return (
     <div className="relative">
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value as FeedbackCategory)}
+        onChange={(e) => onChange(e.target.value as IssueType)}
         className={`appearance-none pl-8 pr-8 py-1.5 rounded-lg text-sm font-medium cursor-pointer border ${config.bg} ${config.text} ${config.border} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm`}
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
@@ -167,9 +186,9 @@ function CategorySelector({ value, onChange }: CategorySelectorProps) {
           backgroundSize: "1rem 1rem",
         }}
       >
-        {FEEDBACK_CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
+        {ISSUE_TYPES.map((type) => (
+          <option key={type} value={type}>
+            {type}
           </option>
         ))}
       </select>
@@ -186,13 +205,73 @@ function CategorySelector({ value, onChange }: CategorySelectorProps) {
   );
 }
 
+interface PrioritySelectorProps {
+  value: Priority;
+  onChange: (newValue: Priority) => void;
+}
+
+function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
+  const config = PRIORITY_CONFIG[value];
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value) as Priority)}
+      className={`appearance-none px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${config.bg} ${config.text} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm`}
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+        backgroundPosition: "right 0.25rem center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "0.75rem 0.75rem",
+        paddingRight: "1.5rem",
+      }}
+    >
+      {PRIORITIES.map((p) => (
+        <option key={p.value} value={p.value}>
+          {p.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+interface IssueSourceSelectorProps {
+  value: IssueSource;
+  onChange: (newValue: IssueSource) => void;
+}
+
+function IssueSourceSelector({ value, onChange }: IssueSourceSelectorProps) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as IssueSource)}
+      className="appearance-none px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:shadow-sm"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+        backgroundPosition: "right 0.25rem center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "0.75rem 0.75rem",
+        paddingRight: "1.5rem",
+      }}
+    >
+      {ISSUE_SOURCES.map((source) => (
+        <option key={source} value={source}>
+          {source}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 interface FeedbackCardProps {
   item: ProcessedFeedback;
   isSelected: boolean;
   isEdited: boolean;
   onSelect: () => void;
   onTitleChange?: (newTitle: string) => void;
-  onCategoryChange?: (newCategory: FeedbackCategory) => void;
+  onIssueTypeChange?: (newType: IssueType) => void;
+  onIssueSourceChange?: (newSource: IssueSource) => void;
+  onPriorityChange?: (newPriority: Priority) => void;
 }
 
 function FeedbackCard({
@@ -201,9 +280,12 @@ function FeedbackCard({
   isEdited,
   onSelect,
   onTitleChange,
-  onCategoryChange,
+  onIssueTypeChange,
+  onIssueSourceChange,
+  onPriorityChange,
 }: FeedbackCardProps) {
-  const config = CATEGORY_CONFIG[item.category];
+  const issueTypeConfig = ISSUE_TYPE_CONFIG[item.issueType || "Improvement"];
+  const priorityConfig = PRIORITY_CONFIG[item.priority ?? 3];
 
   return (
     <div
@@ -261,16 +343,16 @@ function FeedbackCard({
           )}
         </div>
 
-        {/* Category */}
+        {/* Issue Type */}
         <div className="flex-shrink-0">
-          {onCategoryChange ? (
-            <CategorySelector value={item.category} onChange={onCategoryChange} />
+          {onIssueTypeChange ? (
+            <IssueTypeSelector value={item.issueType || "Improvement"} onChange={onIssueTypeChange} />
           ) : (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${config.bg} ${config.text} ${config.border}`}>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${issueTypeConfig.bg} ${issueTypeConfig.text} ${issueTypeConfig.border}`}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={config.icon} />
+                <path strokeLinecap="round" strokeLinejoin="round" d={issueTypeConfig.icon} />
               </svg>
-              {item.category}
+              {item.issueType || item.category}
             </span>
           )}
         </div>
@@ -287,6 +369,38 @@ function FeedbackCard({
             />
           </div>
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">confidence</span>
+        </div>
+      </div>
+
+      {/* Tags row: Priority, Issue Source */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Priority:</span>
+          {onPriorityChange ? (
+            <PrioritySelector value={item.priority ?? 3} onChange={onPriorityChange} />
+          ) : (
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig.bg} ${priorityConfig.text}`}>
+              {priorityConfig.label}
+            </span>
+          )}
+        </div>
+        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Source:</span>
+          {onIssueSourceChange ? (
+            <IssueSourceSelector value={item.issueSource || "user feedback"} onChange={onIssueSourceChange} />
+          ) : (
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+              {item.issueSource || "user feedback"}
+            </span>
+          )}
+        </div>
+        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-zinc-400 dark:text-zinc-500">State:</span>
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+            {item.state || "Backlog"}
+          </span>
         </div>
       </div>
 
@@ -355,9 +469,23 @@ export function FeedbackTable({
     [onItemUpdate]
   );
 
-  const handleCategoryChange = useCallback(
-    (itemId: string, newCategory: FeedbackCategory) => {
-      onItemUpdate?.(itemId, { category: newCategory });
+  const handleIssueTypeChange = useCallback(
+    (itemId: string, newType: IssueType) => {
+      onItemUpdate?.(itemId, { issueType: newType, category: newType });
+    },
+    [onItemUpdate]
+  );
+
+  const handleIssueSourceChange = useCallback(
+    (itemId: string, newSource: IssueSource) => {
+      onItemUpdate?.(itemId, { issueSource: newSource });
+    },
+    [onItemUpdate]
+  );
+
+  const handlePriorityChange = useCallback(
+    (itemId: string, newPriority: Priority) => {
+      onItemUpdate?.(itemId, { priority: newPriority });
     },
     [onItemUpdate]
   );
@@ -433,7 +561,9 @@ export function FeedbackTable({
             isEdited={editedIds.has(item.id)}
             onSelect={() => handleSelectItem(item.id)}
             onTitleChange={onItemUpdate ? (newTitle) => handleTitleChange(item.id, newTitle) : undefined}
-            onCategoryChange={onItemUpdate ? (newCategory) => handleCategoryChange(item.id, newCategory) : undefined}
+            onIssueTypeChange={onItemUpdate ? (newType) => handleIssueTypeChange(item.id, newType) : undefined}
+            onIssueSourceChange={onItemUpdate ? (newSource) => handleIssueSourceChange(item.id, newSource) : undefined}
+            onPriorityChange={onItemUpdate ? (newPriority) => handlePriorityChange(item.id, newPriority) : undefined}
           />
         ))}
       </div>

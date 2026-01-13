@@ -1,12 +1,26 @@
 import { generateJSON } from "@/lib/ai/client";
 import { readContext } from "@/lib/context-storage";
-import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "@/lib/types";
+import {
+  ISSUE_TYPES,
+  ISSUE_SOURCES,
+  PRIORITIES,
+  type IssueType,
+  type IssueSource,
+  type Priority,
+  type WorkflowState,
+  type FeedbackCategory,
+  FEEDBACK_CATEGORIES,
+} from "@/lib/types";
 
 export { FEEDBACK_CATEGORIES, type FeedbackCategory };
 
 export interface CategorizationResult {
   category: FeedbackCategory;
   confidence: number;
+  issueType: IssueType;
+  issueSource: IssueSource;
+  priority: Priority;
+  state: WorkflowState;
 }
 
 export interface CategorizationOptions {
@@ -18,7 +32,9 @@ export interface CategorizationOptions {
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.8;
 
 interface AICategorizationResponse {
-  category: string;
+  issueType: string;
+  issueSource: string;
+  priority: number;
   confidence: number;
 }
 
@@ -27,7 +43,6 @@ export async function categorize(
   options: CategorizationOptions = {}
 ): Promise<CategorizationResult> {
   const {
-    confidenceThreshold = DEFAULT_CONFIDENCE_THRESHOLD,
     codebaseContext,
     strategicPlan,
   } = options;
@@ -43,20 +58,40 @@ export async function categorize(
     }
   }
 
-  const systemPrompt = `You are a feedback categorization assistant. Analyze customer feedback and categorize it into one of these categories:
+  const systemPrompt = `You are a feedback categorization assistant for a product team. Analyze customer feedback and categorize it.
 
+## Issue Types (choose one):
 - Bug: Issues where existing functionality is broken or not working as expected
-- Feature Request: Suggestions to improve or extend existing features
-- UI/UX Issue: Problems with the user interface, design, or user experience
-- AI Hallucination: Cases where AI produced incorrect, fabricated, or misleading output
-- New Feature: Requests for completely new functionality that doesn't exist
-- Documentation: Issues with documentation, help text, or user guides
-${contextInfo}
-Respond with a JSON object containing:
-- category: one of the exact category names above
-- confidence: a number from 0 to 1 representing how confident you are in the categorization
+- Feature: Requests for completely new functionality
+- Improvement: Suggestions to improve or extend existing features
+- Design: UI/UX issues, visual problems, or user experience improvements
+- Security: Security vulnerabilities or concerns
+- Infrastructure: Backend, performance, or technical infrastructure issues
+- gtm: Go-to-market related items (marketing, positioning, launch)
 
-Be precise in your categorization. Use a lower confidence score if the feedback is ambiguous or could fit multiple categories.`;
+## Issue Sources (choose one based on context):
+- user feedback: Direct feedback from end users
+- product: Internally identified by product team
+- team: From internal team members
+- market research: From market research or competitive analysis
+- data insight: From analytics or data analysis
+
+## Priority (0-4):
+- 0: No priority (unclear importance)
+- 1: Urgent (critical issue, needs immediate attention)
+- 2: High (important, should be addressed soon)
+- 3: Medium (normal priority)
+- 4: Low (nice to have, can wait)
+${contextInfo}
+Respond with JSON:
+{
+  "issueType": "one of: Bug, Feature, Improvement, Design, Security, Infrastructure, gtm",
+  "issueSource": "one of: user feedback, product, team, market research, data insight",
+  "priority": 0-4 number,
+  "confidence": 0-1 number for categorization confidence
+}
+
+Analyze the feedback carefully. Most user feedback will be "user feedback" source. Prioritize based on impact and urgency.`;
 
   const response = await generateJSON<AICategorizationResponse>(
     [
@@ -66,41 +101,87 @@ Be precise in your categorization. Use a lower confidence score if the feedback 
     { temperature: 0.2 }
   );
 
-  const category = normalizeCategory(response.category);
+  const issueType = normalizeIssueType(response.issueType);
+  const issueSource = normalizeIssueSource(response.issueSource);
+  const priority = normalizePriority(response.priority);
   const confidence = Math.max(0, Math.min(1, response.confidence));
 
   return {
-    category,
-    confidence: confidence >= confidenceThreshold ? confidence : confidence,
+    category: issueType, // For backwards compatibility
+    confidence,
+    issueType,
+    issueSource,
+    priority,
+    state: "Backlog", // New issues always start in Backlog
   };
 }
 
-function normalizeCategory(category: string): FeedbackCategory {
-  const normalized = category.trim();
+function normalizeIssueType(type: string): IssueType {
+  const normalized = type.trim().toLowerCase();
 
-  const categoryMap: Record<string, FeedbackCategory> = {
+  const typeMap: Record<string, IssueType> = {
     bug: "Bug",
-    "feature request": "Feature Request",
-    "ui/ux issue": "UI/UX Issue",
-    "ui/ux": "UI/UX Issue",
-    "uiux issue": "UI/UX Issue",
-    "ai hallucination": "AI Hallucination",
-    hallucination: "AI Hallucination",
-    "new feature": "New Feature",
-    documentation: "Documentation",
-    docs: "Documentation",
+    feature: "Feature",
+    "feature request": "Feature",
+    "new feature": "Feature",
+    improvement: "Improvement",
+    design: "Design",
+    "ui/ux": "Design",
+    "ui/ux issue": "Design",
+    security: "Security",
+    infrastructure: "Infrastructure",
+    infra: "Infrastructure",
+    gtm: "gtm",
+    "go-to-market": "gtm",
+    marketing: "gtm",
   };
 
-  const lowerCategory = normalized.toLowerCase();
-  if (categoryMap[lowerCategory]) {
-    return categoryMap[lowerCategory];
+  if (typeMap[normalized]) {
+    return typeMap[normalized];
   }
 
-  if (FEEDBACK_CATEGORIES.includes(normalized as FeedbackCategory)) {
-    return normalized as FeedbackCategory;
+  if (ISSUE_TYPES.includes(type as IssueType)) {
+    return type as IssueType;
   }
 
-  return "Feature Request";
+  return "Improvement"; // Default
+}
+
+function normalizeIssueSource(source: string): IssueSource {
+  const normalized = source.trim().toLowerCase();
+
+  const sourceMap: Record<string, IssueSource> = {
+    "user feedback": "user feedback",
+    "userfeedback": "user feedback",
+    "user": "user feedback",
+    "feedback": "user feedback",
+    "product": "product",
+    "team": "team",
+    "internal": "team",
+    "market research": "market research",
+    "research": "market research",
+    "data insight": "data insight",
+    "data": "data insight",
+    "analytics": "data insight",
+  };
+
+  if (sourceMap[normalized]) {
+    return sourceMap[normalized];
+  }
+
+  if (ISSUE_SOURCES.includes(source as IssueSource)) {
+    return source as IssueSource;
+  }
+
+  return "user feedback"; // Default for most feedback
+}
+
+function normalizePriority(priority: number): Priority {
+  const p = Math.round(priority);
+  if (p >= 0 && p <= 4) {
+    return p as Priority;
+  }
+  return 3; // Default to Medium
 }
 
 export async function categorizeMany(
