@@ -169,6 +169,19 @@ function HistoryTableRow({ entry, index }: { entry: HistoryEntry; index: number 
               <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
                 {feedback.originalText}
               </p>
+
+              {/* Chinese Translation */}
+              {feedback.chineseTranslation && (
+                <div className="mt-4">
+                  <div className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2">
+                    Chinese Translation <span className="normal-case">中文翻译</span>
+                  </div>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap bg-amber-50/50 dark:bg-amber-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                    {feedback.chineseTranslation}
+                  </p>
+                </div>
+              )}
+
               {feedback.sourceUrl && (
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-xs text-zinc-400 dark:text-zinc-500">Source:</span>
