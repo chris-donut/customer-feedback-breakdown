@@ -9,6 +9,7 @@
 - Google Sheets public CSV export URL: `https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv`
 - Use `parseDocument(buffer, filename, mimeType?)` from lib/parsers for files, `parseGoogleSheetToFeedback(url)` for Google Sheets
 - AI client: `import { chat, generateJSON } from "@/lib/ai/client"` - chat() for text, generateJSON<T>() for structured JSON
+- Processing pipeline: `import { processFeedback } from "@/lib/services/process-feedback"` - takes FeedbackItem[], returns ProcessedFeedback[]
 
 ---
 
@@ -167,6 +168,19 @@ Thread: https://ampcode.com/threads/T-019bb4a3-bcc8-77f4-83af-4cb80fd2ce50
 - Categorizer: `categorize(feedbackText, options?)` for single, `categorizeMany(items, options?)` for batch
 - FeedbackCategory type: "Bug" | "Feature Request" | "UI/UX Issue" | "AI Hallucination" | "New Feature" | "Documentation"
 
+---
+
+## 2026-01-12 - US-013
+Thread: https://ampcode.com/threads/T-019bb4a6-5037-729e-b5d9-ff607373de5e
+- Created lib/services/process-feedback.ts with processFeedback function
+- Orchestrates full feedback processing: title generation + categorization
+- processFeedbackItem() processes single item, processFeedback() processes batch in parallel
+- Exports ProcessedFeedback interface with id, originalText, generatedTitle, category, confidence
+- Auto-loads context once and passes to both title generator and categorizer
+- Files changed: src/lib/services/process-feedback.ts
+- **Learnings for future iterations:**
+  - Use Promise.all to parallelize title generation and categorization for each item
+  - Load context once at the top of batch processing, pass to individual calls
 ---
 
 ## 2026-01-12 - US-012

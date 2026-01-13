@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@linear/sdk": "^70.0.0",
     "mammoth": "^1.11.0",
     "next": "16.1.1",
     "openai": "^6.16.0",
